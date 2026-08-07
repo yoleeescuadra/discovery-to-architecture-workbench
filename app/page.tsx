@@ -1,105 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import evaluationCases from "@/03_evaluation/evaluation-cases.json";
+import recordedRun from "@/03_evaluation/recorded-run-2026-08-07T18-31-55-434Z.json";
 
-type Stage = "problem" | "discovery" | "architecture" | "decision";
-type DiscoveryChoice = "sources" | "identity" | "success";
-type PilotChoice = "proceed" | "conditions" | "not-yet";
-type Drawer = "architecture" | "evidence" | "evaluation" | null;
+type Lens = "sources" | "identity" | "value";
+type Drawer = "cases" | "evidence" | "method" | null;
+type CaseFilter = "all" | "passed" | "review";
 
-const stages: { id: Stage; number: string; label: string }[] = [
-  { id: "problem", number: "01", label: "Maya's problem" },
-  { id: "discovery", number: "02", label: "Discovery" },
-  { id: "architecture", number: "03", label: "Architecture" },
-  { id: "decision", number: "04", label: "Pilot decision" },
-];
+type RecordedResult = {
+  caseId: string;
+  trial: number;
+  expectedRoute: string;
+  retrievedSourceIds: string[];
+  output: {
+    route: string;
+    response: string;
+    citedSourceIds: string[];
+    uncertainty: string;
+  };
+  grade: { passed: boolean };
+};
 
-const discoveryChoices: {
-  id: DiscoveryChoice;
-  title: string;
-  description: string;
-  response: string;
-}[] = [
+const primaryResults = (recordedRun.results as RecordedResult[]).filter(
+  (result) => result.trial === 1,
+);
+
+const caseRows = evaluationCases.map((testCase) => ({
+  ...testCase,
+  result: primaryResults.find((result) => result.caseId === testCase.id)!,
+}));
+
+const lenses: Array<{ id: Lens; icon: string; label: string; question: string; emphasis: string }> = [
   {
     id: "sources",
-    title: "Which information can be trusted?",
-    description: "Start with document ownership, approval, and freshness.",
-    response:
-      "A strong first question. Without approved, current sources, the assistant cannot produce defensible answers.",
+    icon: "≡",
+    label: "Evidence",
+    question: "What can we trust?",
+    emphasis: "Versioned retrieval becomes the first control: only current, owned guidance enters the active index.",
   },
   {
     id: "identity",
-    title: "How will customer identity be verified?",
-    description: "Clarify what account context the assistant may use.",
-    response:
-      "A critical control question. Account-specific answers require trusted session context, not details typed into a chat.",
+    icon: "◎",
+    label: "Identity",
+    question: "Who is asking?",
+    emphasis: "General guidance stays separate from verified account facts; account-changing actions remain outside the AI path.",
   },
   {
-    id: "success",
-    title: "What would make the pilot worthwhile?",
-    description: "Define value, quality, and acceptable escalation early.",
-    response:
-      "An important business question. A pilot without a baseline or release threshold cannot produce a useful decision.",
+    id: "value",
+    icon: "↗",
+    label: "Value",
+    question: "What proves value?",
+    emphasis: "A fixed test suite and release thresholds decide whether the pilot advances—not model confidence.",
   },
 ];
+
+const architecture = [
+  ["01", "?", "Brief", "Need + context"],
+  ["02", "≡", "Retrieve", "Approved only"],
+  ["03", "✦", "Gemini", "Draft + cite"],
+  ["04", "⌁", "Guardrails", "Block + route"],
+  ["05", "✓", "Human", "Review + send"],
+];
+
+const metrics = [
+  ["Route", 87],
+  ["Grounding", 100],
+  ["Citations", 73],
+  ["Constraints", 100],
+  ["Stability", 100],
+] as const;
 
 const evidence = [
-  {
-    id: "NS-SUP-01",
-    title: "Support Answer Standard",
-    owner: "Customer Support Operations",
-    excerpt:
-      "Every consequential product, plan, entitlement, security, or troubleshooting claim must cite an approved source.",
-  },
-  {
-    id: "NS-SEC-04",
-    title: "Account Authorization Policy",
-    owner: "Identity and Security",
-    excerpt:
-      "The AI-assisted support workflow is read-only and cannot modify accounts, subscriptions, identity settings, or security controls.",
-  },
-  {
-    id: "NS-ENT-07",
-    title: "Subscription and Entitlement Guide",
-    owner: "Product Operations",
-    excerpt:
-      "Specific customer entitlements require trusted account context and must be checked against the authoritative account record.",
-  },
-  {
-    id: "NS-GOV-09",
-    title: "Knowledge Governance Standard",
-    owner: "Knowledge Management",
-    excerpt:
-      "Superseded material remains available for audit history but must be excluded from the active retrieval index.",
-  },
+  ["NS-SUP-01", "Answer standard", "Every consequential claim cites approved evidence."],
+  ["NS-SEC-04", "Authorization", "Read-only workflow; identity and security changes are routed."],
+  ["NS-ENT-07", "Entitlements", "Plan guidance is separate from verified account facts."],
+  ["NS-GOV-09", "Governance", "Current owned sources win; unresolved conflicts escalate."],
 ];
 
-const architectureFocus: Record<DiscoveryChoice, { title: string; copy: string }> = {
-  sources: {
-    title: "Approved-source retrieval",
-    copy: "The active index contains only current, owned documents. Version conflicts are surfaced instead of silently resolved.",
-  },
-  identity: {
-    title: "Trusted account boundary",
-    copy: "General guidance and verified account facts remain separate. Account changes stay outside the AI workflow.",
-  },
-  success: {
-    title: "Evaluation before exposure",
-    copy: "A fixed test suite and release gates determine whether the pilot advances; the model does not grade itself.",
-  },
+const categoryMarks: Record<string, string> = {
+  grounding: "G",
+  identity: "ID",
+  authorization: "A",
+  "missing-evidence": "?",
+  "document-governance": "V",
+  security: "!",
+  discovery: "D",
+  "service-failure": "↻",
+  "prompt-injection": "↯",
 };
 
-function Arrow() {
-  return <span className="flow-arrow" aria-hidden="true">→</span>;
-}
-
 export default function Home() {
-  const [stage, setStage] = useState<Stage>("problem");
-  const [discoveryChoice, setDiscoveryChoice] =
-    useState<DiscoveryChoice | null>(null);
-  const [pilotChoice, setPilotChoice] = useState<PilotChoice | null>(null);
-  const [decisionRevealed, setDecisionRevealed] = useState(false);
+  const [lens, setLens] = useState<Lens>("identity");
   const [drawer, setDrawer] = useState<Drawer>(null);
+  const [caseFilter, setCaseFilter] = useState<CaseFilter>("all");
+  const [expandedCase, setExpandedCase] = useState<string | null>(null);
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -109,420 +104,155 @@ export default function Home() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, []);
 
-  const activeChoice = discoveryChoice
-    ? discoveryChoices.find((choice) => choice.id === discoveryChoice)
-    : null;
-
-  const focus = architectureFocus[discoveryChoice ?? "identity"];
-
-  const goToStage = (next: Stage) => {
-    if (next !== "problem" && !discoveryChoice) return;
-    setStage(next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const activeLens = lenses.find((item) => item.id === lens)!;
+  const filteredCases = useMemo(
+    () => caseRows.filter(({ result }) =>
+      caseFilter === "all" || (caseFilter === "passed" ? result.grade.passed : !result.grade.passed)),
+    [caseFilter],
+  );
 
   return (
     <main className="site-shell">
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Discovery-to-Architecture Workbench home">
           <span className="brand-mark" aria-hidden="true">D→A</span>
-          <span>
-            <strong>Discovery-to-Architecture Workbench</strong>
-            <small>Evidence-backed solution design</small>
-          </span>
+          <span><strong>Discovery-to-Architecture</strong><small>AI solution workbench</small></span>
         </a>
-        <div className="header-note">
-          <span className="status-dot" aria-hidden="true" />
-          Independent project · synthetic case
-        </div>
+        <div className="header-note"><span className="status-dot" />Independent project · synthetic case</div>
       </header>
 
       <section className="workbench" id="top">
-        <nav className="stage-nav" aria-label="Project stages">
-          {stages.map((item) => {
-            const locked = item.id !== "problem" && !discoveryChoice;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={stage === item.id ? "stage-button active" : "stage-button"}
-                onClick={() => goToStage(item.id)}
-                aria-current={stage === item.id ? "step" : undefined}
-                disabled={locked}
-              >
-                <span>{item.number}</span>
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
+        <div className="hero-strip">
+          <div>
+            <span className="eyebrow">Meet Maya, a support lead · 5-minute case</span>
+            <h1>Can she trust AI with customer answers?</h1>
+          </div>
+          <p>Scattered guidance. Repeated questions. One hard rule: <strong>AI may draft—not act.</strong></p>
+        </div>
 
-        {stage === "problem" && (
-          <section className="stage-content problem-stage" aria-labelledby="problem-title">
-            <div className="human-label">Meet Maya, a support lead</div>
-            <h1 id="problem-title">
-              Her team knows the answers.
-              <br />Finding them is the problem.
-            </h1>
-            <p className="lead">
-              Maya&apos;s team repeatedly answers questions about product setup,
-              plans, and account access. The correct guidance exists, but it is
-              scattered across documentation, policies, and troubleshooting notes.
-            </p>
-
-            <blockquote className="maya-brief">
-              <p>
-                “I want AI to help draft consistent answers. It must cite trusted
-                sources, admit when information is missing, and never change a
-                customer&apos;s account.”
-              </p>
-              <footer>— Maya&apos;s fictional project brief</footer>
-            </blockquote>
-
-            <div className="question-block">
-              <div className="question-heading">
-                <span>Your turn</span>
-                <h2>What would you investigate first?</h2>
-                <p>There is no bad starting point. Your choice changes what the architecture emphasizes.</p>
-              </div>
-              <div className="choice-grid">
-                {discoveryChoices.map((choice) => (
-                  <button
-                    key={choice.id}
-                    type="button"
-                    className={discoveryChoice === choice.id ? "choice-card selected" : "choice-card"}
-                    onClick={() => setDiscoveryChoice(choice.id)}
-                    aria-pressed={discoveryChoice === choice.id}
-                  >
-                    <span className="choice-indicator" aria-hidden="true" />
-                    <strong>{choice.title}</strong>
-                    <small>{choice.description}</small>
+        <div className="glance-grid">
+          <section className="story-card brief-card" aria-labelledby="brief-title">
+            <div className="card-label"><span>01</span> Customer need</div>
+            <div className="maya-row">
+              <div className="avatar" aria-hidden="true">M</div>
+              <div><h2 id="brief-title">Maya needs consistency</h2><p>without losing control</p></div>
+            </div>
+            <div className="need-stack" aria-label="Customer requirements">
+              <div><span className="need-icon">↓</span><strong>Less searching</strong><small>Answers live in four places</small></div>
+              <div><span className="need-icon">⌕</span><strong>Visible evidence</strong><small>Cite every important claim</small></div>
+              <div><span className="need-icon">⊘</span><strong>No account actions</strong><small>Drafts remain human-reviewed</small></div>
+            </div>
+            <div className="lens-prompt">
+              <span>What would you investigate first?</span>
+              <div className="lens-grid">
+                {lenses.map((item) => (
+                  <button key={item.id} type="button" className={lens === item.id ? "lens active" : "lens"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id} title={item.question}>
+                    <b aria-hidden="true">{item.icon}</b><small>{item.label}</small>
                   </button>
                 ))}
               </div>
             </div>
-
-            <div className="stage-actions right-aligned">
-              <button
-                type="button"
-                className="primary-action"
-                disabled={!discoveryChoice}
-                onClick={() => goToStage("discovery")}
-              >
-                See what the Workbench found <span aria-hidden="true">→</span>
-              </button>
-            </div>
           </section>
-        )}
 
-        {stage === "discovery" && (
-          <section className="stage-content" aria-labelledby="discovery-title">
-            <div className="stage-kicker">Discovery synthesis</div>
-            <h1 id="discovery-title">Start with what is known—and expose what is not.</h1>
-            <p className="lead narrow">
-              The Workbench structures Maya&apos;s brief. A human architect still confirms every fact, assumption, and unanswered question.
-            </p>
-
-            {activeChoice && (
-              <div className="choice-response">
-                <span>You started with</span>
-                <strong>{activeChoice.title}</strong>
-                <p>{activeChoice.response}</p>
-              </div>
-            )}
-
-            <div className="discovery-columns">
-              <section className="quiet-panel">
-                <div className="panel-heading">
-                  <span className="panel-number">01</span>
-                  <h2>What Maya told us</h2>
+          <section className="story-card architecture-card" aria-labelledby="architecture-title">
+            <div className="card-label"><span>02</span> Proposed architecture</div>
+            <div className="section-heading">
+              <div><h2 id="architecture-title">Useful AI. External control.</h2><p>Each boundary has one job.</p></div>
+              <button type="button" className="mini-link" onClick={() => setDrawer("method")}>Why this design →</button>
+            </div>
+            <div className="architecture-map" aria-label="Request flows from brief through retrieval, Gemini, guardrails, and human review">
+              {architecture.map(([step, icon, title, subtitle], index) => (
+                <div className="map-step-wrap" key={step}>
+                  <div className={`map-step ${title === "Gemini" ? "model" : ""} ${title === "Guardrails" ? "control" : ""}`}>
+                    <span className="map-index">{step}</span><b className="map-icon" aria-hidden="true">{icon}</b><strong>{title}</strong><small>{subtitle}</small>
+                  </div>
+                  {index < architecture.length - 1 && <span className="map-arrow" aria-hidden="true">→</span>}
                 </div>
-                <ul className="finding-list confirmed">
-                  <li><strong>Business goal</strong><span>Reduce repetitive work and improve answer consistency.</span></li>
-                  <li><strong>Evidence requirement</strong><span>Cite a trusted source for every important claim.</span></li>
-                  <li><strong>Hard boundary</strong><span>Never change an account, subscription, or security setting.</span></li>
-                  <li><strong>Pilot user</strong><span>Support specialists review drafts before anything reaches customers.</span></li>
-                </ul>
-              </section>
-
-              <section className="quiet-panel emphasized">
-                <div className="panel-heading">
-                  <span className="panel-number">02</span>
-                  <h2>What Maya still needs to answer</h2>
-                </div>
-                <ul className="finding-list unknown">
-                  <li><strong>Trusted identity</strong><span>How will verified account context enter the workflow?</span></li>
-                  <li><strong>Source ownership</strong><span>Who approves guidance and removes outdated material?</span></li>
-                  <li><strong>Pilot value</strong><span>What baseline and quality threshold justify expansion?</span></li>
-                  <li><strong>Failure route</strong><span>What happens when retrieval or account context is unavailable?</span></li>
-                </ul>
-              </section>
-            </div>
-
-            <div className="principle-line">
-              <span>Design principle</span>
-              <strong>A missing answer becomes a discovery question—not a model assumption.</strong>
-            </div>
-
-            <div className="stage-actions">
-              <button type="button" className="text-action" onClick={() => goToStage("problem")}>← Revisit your choice</button>
-              <button type="button" className="primary-action" onClick={() => goToStage("architecture")}>Reveal the architecture <span aria-hidden="true">→</span></button>
-            </div>
-          </section>
-        )}
-
-        {stage === "architecture" && (
-          <section className="stage-content" aria-labelledby="architecture-title">
-            <div className="stage-kicker">Proposed architecture</div>
-            <h1 id="architecture-title">Useful AI inside rules it cannot override.</h1>
-            <p className="lead narrow">
-              The model interprets and drafts. Approved evidence, account boundaries, and release decisions remain externally controlled.
-            </p>
-
-            <div className="selected-focus">
-              <span>Because you prioritized</span>
-              <strong>{activeChoice?.title ?? "How will customer identity be verified?"}</strong>
-              <p><b>{focus.title}.</b> {focus.copy}</p>
-            </div>
-
-            <div className="architecture-flow" role="img" aria-label="Support request flows through context capture, approved-source retrieval, Gemini drafting, deterministic controls, and then to a cited draft or human escalation">
-              <div className="flow-node">
-                <span className="node-step">1</span>
-                <strong>Understand the request</strong>
-                <small>Question, trusted context, and known constraints</small>
-              </div>
-              <Arrow />
-              <div className="flow-node">
-                <span className="node-step">2</span>
-                <strong>Find approved guidance</strong>
-                <small>Current documents only; source versions preserved</small>
-              </div>
-              <Arrow />
-              <div className="flow-node model-node">
-                <span className="node-step">3</span>
-                <strong>Draft with Gemini</strong>
-                <small>Structured recommendation with claim-level citations</small>
-              </div>
-              <Arrow />
-              <div className="flow-node control-node">
-                <span className="node-step">4</span>
-                <strong>Apply rules AI cannot override</strong>
-                <small>Authorization, citations, source approval, escalation</small>
-              </div>
-              <Arrow />
-              <div className="flow-node">
-                <span className="node-step">5</span>
-                <strong>Return a safe next step</strong>
-                <small>Cited draft, clarification, or specialist route</small>
-              </div>
-            </div>
-
-            <div className="architecture-note">
-              <div>
-                <span>Implemented prototype</span>
-                <strong>Interactive workflow, synthetic evidence, 15 recorded Gemini cases, and a rule-based pilot gate</strong>
-              </div>
-              <div>
-                <span>Proposed production path</span>
-                <strong>Managed runtime, versioned retrieval, Gemini structured output, logging, and monitoring</strong>
-              </div>
-            </div>
-
-            <div className="evidence-actions" aria-label="Inspect project evidence">
-              <button type="button" onClick={() => setDrawer("architecture")}>Why this architecture?</button>
-              <button type="button" onClick={() => setDrawer("evidence")}>View source evidence</button>
-              <button type="button" onClick={() => setDrawer("evaluation")}>View recorded evaluation</button>
-            </div>
-
-            <div className="stage-actions">
-              <button type="button" className="text-action" onClick={() => goToStage("discovery")}>← Back to discovery</button>
-              <button type="button" className="primary-action" onClick={() => goToStage("decision")}>Make the pilot decision <span aria-hidden="true">→</span></button>
-            </div>
-          </section>
-        )}
-
-        {stage === "decision" && (
-          <section className="stage-content decision-stage" aria-labelledby="decision-title">
-            <div className="stage-kicker">Pilot decision</div>
-            <h1 id="decision-title">Would you let Maya begin?</h1>
-            <p className="lead narrow">
-              Choose before seeing the designed release decision. The pilot gate uses explicit conditions—not model confidence.
-            </p>
-
-            <div className="pilot-choices">
-              {[
-                ["proceed", "Proceed", "Begin the customer-facing pilot now."],
-                ["conditions", "Proceed with conditions", "Start narrowly while specific safeguards are completed."],
-                ["not-yet", "Not yet", "Resolve the open questions before any pilot."],
-              ].map(([id, label, description]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={pilotChoice === id ? "pilot-choice selected" : "pilot-choice"}
-                  onClick={() => {
-                    setPilotChoice(id as PilotChoice);
-                    setDecisionRevealed(false);
-                  }}
-                  aria-pressed={pilotChoice === id}
-                >
-                  <span className="pilot-radio" aria-hidden="true" />
-                  <strong>{label}</strong>
-                  <small>{description}</small>
-                </button>
               ))}
             </div>
-
-            {!decisionRevealed ? (
-              <div className="decision-reveal-action">
-                <button
-                  type="button"
-                  className="primary-action"
-                  disabled={!pilotChoice}
-                  onClick={() => setDecisionRevealed(true)}
-                >
-                  Compare with the release gate <span aria-hidden="true">→</span>
-                </button>
-              </div>
-            ) : (
-              <div className="decision-result" aria-live="polite">
-                <div className="decision-summary">
-                  <span>Designed reference decision</span>
-                  <h2>Proceed internally; keep customer-facing use blocked</h2>
-                  <p>
-                    The recorded run passed 10 of 15 cases. Continue only as an internal, human-reviewed iteration; citation and discovery failures must be fixed before direct customer exposure.
-                  </p>
-                  <div className="comparison-note">
-                    {pilotChoice === "conditions"
-                      ? "Your conditional choice is closest: an internal iteration may continue, but the customer-facing gate remains closed."
-                      : pilotChoice === "proceed"
-                        ? "The recorded evidence is more cautious than your choice: five cases failed the release checks."
-                        : "Your choice matches the customer-facing decision. The reference design still permits controlled internal improvement."}
-                  </div>
-                </div>
-                <div className="gate-list">
-                  <div><span className="gate-state defined">Defined</span><strong>Approved-source boundary</strong><small>Only current, owned documents enter retrieval.</small></div>
-                  <div><span className="gate-state defined">Defined</span><strong>No account-changing actions</strong><small>The workflow is read-only by policy and design.</small></div>
-                  <div><span className="gate-state failed">Blocked</span><strong>Recorded Gemini evaluation</strong><small>10/15 passed. Citation quality reached 73%; two discovery routes were incorrect.</small></div>
-                  <div><span className="gate-state pending">Pending</span><strong>Identity and monitoring validation</strong><small>Required before any direct customer exposure.</small></div>
-                </div>
-              </div>
-            )}
-
-            <div className="evidence-actions" aria-label="Inspect project evidence">
-              <button type="button" onClick={() => setDrawer("evidence")}>View source evidence</button>
-              <button type="button" onClick={() => setDrawer("evaluation")}>View recorded evaluation</button>
+            <div className="lens-result">
+              <span className="lens-symbol" aria-hidden="true">{activeLens.icon}</span>
+              <div><small>Your lens · {activeLens.label}</small><strong>{activeLens.question}</strong><p>{activeLens.emphasis}</p></div>
             </div>
-
-            <div className="stage-actions">
-              <button type="button" className="text-action" onClick={() => goToStage("architecture")}>← Back to architecture</button>
-              <button
-                type="button"
-                className="text-action"
-                onClick={() => {
-                  setDiscoveryChoice(null);
-                  setPilotChoice(null);
-                  setDecisionRevealed(false);
-                  setStage("problem");
-                }}
-              >
-                Start again
-              </button>
-            </div>
+            <div className="control-line"><span>Model</span><b>interprets + drafts</b><i>→</i><span>System</span><b>authorizes + releases</b></div>
           </section>
-        )}
+
+          <section className="story-card gate-card" aria-labelledby="gate-title">
+            <div className="card-label"><span>03</span> Recorded pilot gate</div>
+            <div className="gate-hero">
+              <div className="score-ring" aria-label="10 of 15 cases passed"><span><b>10</b>/15</span></div>
+              <div><span className="blocked-pill">Customer-facing blocked</span><h2 id="gate-title">Improve, then retest</h2><p>Safe constraints held. Citations did not.</p></div>
+            </div>
+            <div className="metric-list" aria-label="Evaluation scorecard">
+              {metrics.map(([label, value]) => (
+                <div key={label}><span>{label}</span><div className="metric-track"><i style={{ width: `${value}%` }} /></div><b>{value}%</b></div>
+              ))}
+            </div>
+            <div className="failure-signal"><span>5</span><p><strong>cases need review</strong>3 citation · 2 discovery</p></div>
+            <button type="button" className="case-cta" onClick={() => setDrawer("cases")}><span className="case-grid-icon" aria-hidden="true">▦</span><span><strong>Inspect all 15 test cases</strong><small>Expected vs actual · sources · response</small></span><b>→</b></button>
+          </section>
+        </div>
+
+        <div className="bottom-rail">
+          <div><span className="rail-dot pass" />Internal, human-reviewed iteration</div>
+          <div><span className="rail-dot fail" />Direct customer exposure</div>
+          <button type="button" onClick={() => setDrawer("evidence")}>4 approved sources <span>→</span></button>
+          <small>Recorded on Gemini 3.5 Flash-Lite · synthetic evidence · no live visitor calls</small>
+        </div>
       </section>
 
-      <footer className="site-footer">
-        <p>
-          Independent reference implementation by Yolee Escuadra. All organizations,
-          policies, account details, and evaluation cases are fictional.
-        </p>
-        <p>No employer, client, or production data is used.</p>
-      </footer>
+      <footer className="site-footer">Independent reference implementation by Yolee Escuadra. No employer, client, or production data.</footer>
 
       {drawer && (
-        <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => {
-          if (event.currentTarget === event.target) setDrawer(null);
-        }}>
-          <aside className="evidence-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setDrawer(null); }}>
+          <aside className={`evidence-drawer ${drawer === "cases" ? "wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
             <div className="drawer-header">
-              <div>
-                <span>Inspect the work</span>
-                <h2 id="drawer-title">
-                  {drawer === "evidence"
-                    ? "Approved source evidence"
-                    : drawer === "evaluation"
-                      ? "Recorded evaluation"
-                      : "Architecture decision"}
-                </h2>
-              </div>
-              <button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close evidence drawer">×</button>
+              <div><span>Inspect the work</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div>
+              <button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button>
             </div>
 
-            {drawer === "evidence" && (
-              <div className="drawer-body">
-                <p className="drawer-intro">Four synthetic documents form the approved V1 knowledge boundary.</p>
-                <div className="document-list">
-                  {evidence.map((document) => (
-                    <article key={document.id}>
-                      <div className="document-meta"><span>{document.id}</span><span>Approved · current</span></div>
-                      <h3>{document.title}</h3>
-                      <small>Owner: {document.owner}</small>
-                      <blockquote>“{document.excerpt}”</blockquote>
-                    </article>
-                  ))}
+            {drawer === "cases" && (
+              <div className="drawer-body case-body">
+                <div className="case-summary">
+                  <div><b>10</b><span>passed</span></div><div className="summary-divider" /><div><b>5</b><span>review</span></div>
+                  <p>Click a row for Gemini&apos;s response and supporting sources.</p>
+                </div>
+                <div className="case-filters" aria-label="Filter cases">
+                  {(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? "All 15" : filter === "passed" ? "Passed 10" : "Review 5"}</button>)}
+                </div>
+                <div className="case-list">
+                  {filteredCases.map((testCase) => {
+                    const { result } = testCase;
+                    const open = expandedCase === testCase.id;
+                    return (
+                      <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
+                        <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}>
+                          <span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span>
+                          <span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span>
+                          <span className="route-pair"><small>Route</small><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span>
+                          <span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span>
+                          <span className="expand-mark">{open ? "−" : "+"}</span>
+                        </button>
+                        {open && <div className="case-detail">
+                          <div><small>Known context</small><p>{testCase.context}</p></div>
+                          <div><small>Gemini response</small><p>{result.output.response}</p></div>
+                          <div className="detail-meta"><span><small>Retrieved</small>{result.retrievedSourceIds.join(" · ")}</span><span><small>Cited</small>{result.output.citedSourceIds.length ? result.output.citedSourceIds.join(" · ") : "None"}</span></div>
+                        </div>}
+                      </article>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {drawer === "evaluation" && (
-              <div className="drawer-body">
-                <div className="evaluation-status">
-                  <span>Recorded model run</span>
-                  <strong>10/15 cases passed · customer-facing gate closed</strong>
-                  <p>21 controlled calls on Gemini 3.5 Flash-Lite: one primary run per case, plus repeat trials on three high-risk cases.</p>
-                </div>
-                <div className="evaluation-groups">
-                  <div><strong>87%</strong><span>Route accuracy</span></div>
-                  <div><strong>100%</strong><span>Grounding coverage</span></div>
-                  <div><strong>73%</strong><span>Citation quality</span></div>
-                  <div><strong>100%</strong><span>Constraint compliance</span></div>
-                  <div><strong>100%</strong><span>Recommendation stability</span></div>
-                  <div><strong>5</strong><span>Cases requiring review</span></div>
-                </div>
-                <section className="drawer-section">
-                  <span>What failed</span>
-                  <ul>
-                    <li>Three otherwise-correct answers omitted a required policy or governance citation.</li>
-                    <li>The missing data-residency case escalated instead of asking for clarification.</li>
-                    <li>The changing-documentation case answered with policy instead of identifying the ownership gap.</li>
-                  </ul>
-                </section>
-                <section className="drawer-section">
-                  <span>Release interpretation</span>
-                  <p>All deterministic safety constraints passed, but the result is not production readiness. Improve citation enforcement and discovery routing, rerun the fixed suite, then expand it before considering customer-facing use.</p>
-                </section>
-              </div>
-            )}
+            {drawer === "evidence" && <div className="drawer-body"><p className="drawer-intro">Four fictional, current documents form the complete V1 knowledge boundary.</p><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
 
-            {drawer === "architecture" && (
-              <div className="drawer-body">
-                <section className="drawer-section first">
-                  <span>Decision</span>
-                  <h3>Separate probabilistic interpretation from deterministic control.</h3>
-                  <p>Gemini may extract requirements and draft a recommendation. It cannot approve sources, authorize actions, or declare the pilot ready.</p>
-                </section>
-                <section className="drawer-section">
-                  <span>Rejected alternative</span>
-                  <h3>Prompt-only support assistant</h3>
-                  <p>Rejected because a prompt alone cannot reliably enforce document approval, account boundaries, or version-aware evidence.</p>
-                </section>
-                <section className="drawer-section">
-                  <span>Still provisional</span>
-                  <p>The production architecture remains conditional on Maya&apos;s unanswered questions about trusted identity, document ownership, baselines, and monitoring.</p>
-                </section>
-              </div>
-            )}
+            {drawer === "method" && <div className="drawer-body method-body">
+              <div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret, draft, cite</strong></div></div>
+              <div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, authorize actions, release the pilot</strong></div></div>
+              <section><small>Design choice</small><h3>Separate probabilistic work from deterministic control.</h3><p>The model proposes. Approved evidence, account boundaries, and release thresholds remain externally enforced.</p></section>
+              <section><small>Recorded result</small><h3>10/15 passed. The gate stayed closed.</h3><p>That is the point of the workbench: evaluation changes the business decision instead of decorating it.</p></section>
+            </div>}
           </aside>
         </div>
       )}

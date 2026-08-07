@@ -61,9 +61,9 @@ test("keeps implementation status and production proposal explicit", async () =>
     readFile(new URL("../PUBLIC_PRIVATE_BOUNDARY.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /Implemented prototype/);
-  assert.match(page, /Proposed production path/);
-  assert.match(page, /10\/15 cases passed/i);
+  assert.match(page, /Proposed architecture/);
+  assert.match(page, /Recorded pilot gate/);
+  assert.match(page, /10 of 15 cases passed/i);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
