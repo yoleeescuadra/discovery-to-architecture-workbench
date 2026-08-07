@@ -24,10 +24,10 @@ Maya leads a support team with scattered guidance and repetitive questions. Shou
 - Synthetic source corpus: implemented
 - Initial 15-case evaluation suite: implemented
 - Rule-based reference decision: implemented
-- Recorded Gemini experiment: pending local free-tier credentials
+- Recorded Gemini experiment: completed with Gemini 3.5 Flash-Lite (21 controlled calls; 10/15 primary cases passed)
 - Expansion to approximately 30 evaluated cases: planned before LinkedIn launch
 
-The interface intentionally does not present placeholder model scores as genuine results.
+The interface presents the recorded result, including five failures. It does not treat a model run as production validation: the customer-facing release gate remains closed.
 
 ## Project structure
 
@@ -44,4 +44,3 @@ All organizations, people, policies, account details, and evaluation cases are f
 ## Authorship
 
 Yolee framed the scenario, defined the discovery model, designed the architecture and release gates, created the synthetic evidence, and developed the prototype using AI-assisted tools. This is a reference implementation, not a production customer deployment.
-

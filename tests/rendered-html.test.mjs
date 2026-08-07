@@ -63,8 +63,9 @@ test("keeps implementation status and production proposal explicit", async () =>
 
   assert.match(page, /Implemented prototype/);
   assert.match(page, /Proposed production path/);
-  assert.match(page, /recorded Gemini run pending/i);
-  assert.match(readme, /Recorded Gemini experiment: pending/i);
+  assert.match(page, /10\/15 cases passed/i);
+  assert.match(page, /Gemini 3\.5 Flash-Lite/i);
+  assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
   assert.doesNotMatch(page, /Navagis|Brinks/i);
 });

@@ -30,11 +30,10 @@
 
 ## Pre-publication gate
 
-- [ ] Recorded Gemini run completed
-- [ ] Model and prompt configuration documented
-- [ ] Failures reviewed and represented honestly
+- [x] Recorded Gemini run completed
+- [x] Model and prompt configuration documented
+- [x] Failures reviewed and represented honestly
 - [ ] Initial 15 cases expanded or justified before launch
 - [ ] No credential or private-data patterns found
 - [ ] Implemented and proposed architecture labels remain visible
 - [ ] Social preview text and link verified
-
