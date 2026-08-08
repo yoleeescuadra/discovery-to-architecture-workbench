@@ -46,7 +46,10 @@ type LensConfig = {
   test: {
     headline: string;
     explanation: string;
-    scoreLabel: string;
+    focusValue: string;
+    focusLabel: string;
+    suiteContext: string;
+    traceResult: string;
     signals: Array<{ value: string; label: string; state: "pass" | "review" }>;
   };
   decision: {
@@ -65,7 +68,8 @@ const lenses: LensConfig[] = [
     test: {
       headline: "All 15 cases passed the evidence checks.",
       explanation: "Grounding and citations passed in every case. Overall, 14 of 15 cases passed because one separate identity-routing case still needs review.",
-      scoreLabel: "overall cases passed",
+      focusValue: "15/15", focusLabel: "Evidence checks passed",
+      suiteContext: "Overall suite: 14 of 15 cases passed", traceResult: "15/15 evidence checks passed",
       signals: [
         { value: "100%", label: "Grounding coverage", state: "pass" },
         { value: "100%", label: "Citation quality", state: "pass" },
@@ -89,7 +93,8 @@ const lenses: LensConfig[] = [
     test: {
       headline: "14 of 15 test cases passed. One identity-routing case needs review.",
       explanation: "Gemini protected the account data, but answered instead of asking the customer to verify identity.",
-      scoreLabel: "technical cases",
+      focusValue: "1", focusLabel: "Identity-routing case needs review",
+      suiteContext: "Overall suite: 14 of 15 cases passed", traceResult: "1 identity-routing case to fix",
       signals: [
         { value: "100%", label: "Account protection", state: "pass" },
         { value: "100%", label: "Citation quality", state: "pass" },
@@ -113,7 +118,8 @@ const lenses: LensConfig[] = [
     test: {
       headline: "The model test does not yet prove business value.",
       explanation: "Safety and grounding were measured, but there is no baseline for resolution time, answer quality or support effort.",
-      scoreLabel: "technical cases",
+      focusValue: "0", focusLabel: "Business baselines defined",
+      suiteContext: "Technical suite: 14 of 15 cases passed", traceResult: "Business value not measured",
       signals: [
         { value: "14/15", label: "Technical cases", state: "pass" },
         { value: "Not set", label: "Business baseline", state: "review" },
@@ -250,14 +256,14 @@ export default function Home() {
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
               <div className="evaluation-copy"><span className="eyebrow">Recorded test · Focus: {designLens.label}</span><h1 id="evaluation-title">{designLens.test.headline}</h1><p>{designLens.test.explanation}</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
-              <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>{designLens.test.scoreLabel}</small></span></div><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
+              <div className="result-visual"><div className="focus-result-card"><small>Your chosen focus</small><b>{designLens.test.focusValue}</b><strong>{designLens.test.focusLabel}</strong></div><div className="suite-context">{designLens.test.suiteContext}</div><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>See the recommendation <span>→</span></button></div>
             </section>
           )}
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
-              <div className="decision-symbol">↗<span>{designLens.decision.status}</span></div>
+              <div className="journey-trace"><small>Your journey</small><ol><li><span>1</span><div><small>Problem</small><b>Scattered support guidance</b></div></li><li><span>2</span><div><small>You chose</small><b>{designLens.label}</b></div></li><li><span>3</span><div><small>Design focus</small><b>{designLens.focusNode}</b></div></li><li><span>4</span><div><small>Recorded test</small><b>{designLens.test.traceResult}</b></div></li><li><span>5</span><div><small>Recommendation</small><b>{designLens.decision.status}</b></div></li></ol></div>
               <div className="decision-copy"><span className="eyebrow">Recommendation · Based on your {designLens.label} choice</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><div className="decision-gates">{designLens.decision.gates.map((gate) => <div key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small></div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>

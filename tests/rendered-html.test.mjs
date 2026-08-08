@@ -85,6 +85,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Success thresholds/);
   assert.match(page, /All 15 cases passed the evidence checks\./);
   assert.match(page, /one separate identity-routing case still needs review/i);
+  assert.match(page, /Your chosen focus/);
+  assert.match(page, /Overall suite: 14 of 15 cases passed/);
   assert.match(page, /14 of 15 cases passed/i);
   assert.match(page, /The model test does not yet prove business value\./);
   assert.match(page, /Validate live retrieval before customer use\./);
@@ -92,6 +94,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Establish the baseline before starting a pilot\./);
   assert.match(page, /current human-only workflow first/i);
   assert.match(page, /Recommendation · Based on your/);
+  assert.match(page, /Your journey/);
+  assert.match(page, /Recorded test/);
   assert.match(page, /Fixed checks compare it with the expected action, evidence and safety rules\./);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
