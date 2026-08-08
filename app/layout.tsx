@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const imageUrl = new URL("/og.png", origin).toString();
   const title = "Discovery-to-Architecture Workbench";
   const description =
-    "A relatable, evidence-backed AI solution-design case from ambiguous customer need to conditional pilot decision.";
+    "A relatable, evidence-backed AI solution-design case from ambiguous customer need to cross-lens pilot-readiness decision.";
 
   return {
     title,
