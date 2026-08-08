@@ -34,10 +34,10 @@ const stages: Array<{ id: Stage; label: string }> = [
   { id: "decision", label: "Decide" },
 ];
 
-const lenses: Array<{ id: Lens; icon: string; label: string; question: string; consequence: string }> = [
-  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", consequence: "Only current, owned guidance enters retrieval." },
-  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", consequence: "General guidance stays separate from verified account facts." },
-  { id: "value", icon: "↗", label: "Value", question: "What proves value?", consequence: "Fixed thresholds, not model confidence, advance the pilot." },
+const lenses: Array<{ id: Lens; icon: string; label: string; question: string; consequence: string; focusNode: string; controls: string[] }> = [
+  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", consequence: "Only current, owned guidance enters retrieval.", focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"] },
+  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", consequence: "General guidance stays separate from verified account facts.", focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"] },
+  { id: "value", icon: "↗", label: "Value", question: "What proves value?", consequence: "Fixed thresholds, not model confidence, advance the pilot.", focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"] },
 ];
 
 const architecture = [
@@ -76,12 +76,16 @@ export default function Home() {
 
   const stageIndex = stages.findIndex((item) => item.id === stage);
   const activeLens = lenses.find((item) => item.id === lens);
+  const designLens = activeLens ?? lenses[1];
   const filteredCases = useMemo(
     () => caseRows.filter(({ result }) => caseFilter === "all" || (caseFilter === "passed" ? result.grade.passed : !result.grade.passed)),
     [caseFilter],
   );
 
-  const move = (next: Stage) => setStage(next);
+  const move = (next: Stage) => {
+    if (next === "architecture" && !lens) setLens("identity");
+    setStage(next);
+  };
 
   return (
     <main className="site-shell">
@@ -135,17 +139,17 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("brief")}>← Problem</button><button type="button" className="primary-action" disabled={!lens} onClick={() => move("architecture")}>See the design <span>→</span></button></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("brief")}>← Problem</button><button type="button" className="primary-action" disabled={!lens} onClick={() => move("architecture")}>Apply this lens <span>→</span></button></div>
             </section>
           )}
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Proposed architecture</span><h1 id="architecture-title">Gemini drafts. The system decides.</h1><p>Useful AI sits inside boundaries it cannot override.</p></div>
-              <div className="architecture-flow" aria-label="Brief flows through retrieval, Gemini, guardrails, and human review">
-                {architecture.map(([icon, label], index) => <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""}`}><span>{icon}</span><b>{label}</b></div>{index < architecture.length - 1 && <i>→</i>}</div>)}
+              <div className="stage-heading"><span className="eyebrow">Proposed architecture · {designLens.label} lens</span><h1 id="architecture-title">Same core. Different control priority.</h1><p>{designLens.focusNode} moves into focus without removing the controls every safe design needs.</p></div>
+              <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
+                {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""} ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
-              <div className="architecture-insight"><span>{activeLens?.icon ?? "◎"}</span><div><small>Because you chose {activeLens?.label ?? "Identity"}</small><strong>{activeLens?.consequence ?? lenses[1].consequence}</strong></div></div>
+              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>{designLens.label} lens → {designLens.focusNode} priority</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control}>{control}</i>)}</div></div></div>
               <button type="button" className="quiet-link" onClick={() => setDrawer("method")}>Why this separation matters →</button>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>Test the design <span>→</span></button></div>
             </section>
