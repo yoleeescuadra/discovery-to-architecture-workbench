@@ -64,7 +64,9 @@ button { cursor: pointer; }
 .eyebrow { color: var(--pine); font-size: 11px; font-weight: 750; line-height: 1.4; letter-spacing: .1em; text-transform: uppercase; }
 .brief-copy h1, .stage-heading h1, .evaluation-copy h1, .decision-copy h1 { margin: 13px 0 0; font-size: clamp(40px, 4.6vw, 66px); font-weight: 520; letter-spacing: -.055em; line-height: .98; }
 .brief-copy > p, .stage-heading > p, .evaluation-copy > p, .decision-copy > p { max-width: 580px; margin: 20px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
-.brief-copy blockquote { max-width: 570px; margin: 26px 0 0; padding: 15px 18px; color: var(--pine-dark); background: linear-gradient(135deg, var(--mint), var(--sky)); border: 0; border-left: 3px solid var(--pine); border-radius: 0 12px 12px 0; font-size: 14px; line-height: 1.6; }
+.brief-copy blockquote { display: grid; max-width: 570px; margin: 24px 0 0; padding: 14px 18px; color: var(--pine-dark); background: linear-gradient(135deg, var(--mint), var(--sky)); border: 0; border-left: 3px solid var(--pine); border-radius: 0 12px 12px 0; font-size: 14px; line-height: 1.55; }
+.brief-copy blockquote small { margin-bottom: 3px; color: var(--pine); font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.brief-copy blockquote span { font-weight: 570; }
 .primary-action { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-height: 46px; margin-top: 24px; padding: 0 19px; color: #fff; background: linear-gradient(135deg, #0d7772, #125467); border: 1px solid rgba(10,92,91,.65); border-radius: 11px; box-shadow: 0 10px 24px rgba(15,102,99,.16), inset 0 1px rgba(255,255,255,.16); font-size: 12px; font-weight: 750; transition: transform .2s ease, box-shadow .2s ease; }
 .primary-action:hover { box-shadow: 0 14px 30px rgba(15,102,99,.24), inset 0 1px rgba(255,255,255,.18); transform: translateY(-2px); }
 .primary-action:disabled { cursor: not-allowed; opacity: .4; }

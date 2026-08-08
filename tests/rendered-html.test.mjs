@@ -31,8 +31,8 @@ test("server-renders the Workbench experience and finished metadata", async () =
 
   const html = await response.text();
   assert.match(html, /<title>Discovery-to-Architecture Workbench<\/title>/i);
-  assert.match(html, /Meet Maya, a support lead/i);
-  assert.match(html, /Step into Maya&#x27;s brief/i);
+  assert.match(html, /Fictional client challenge · Meet Maya/i);
+  assert.match(html, /Start the discovery/i);
   assert.match(html, /Independent project · fictional case/i);
   assert.match(html, /og\.png/i);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
