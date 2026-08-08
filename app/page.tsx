@@ -121,12 +121,12 @@ const lenses: LensConfig[] = [
       ],
     },
     decision: {
-      status: "Measure first", headline: "Set a baseline before deciding whether to expand.",
-      explanation: "Run an internal measurement pilot. Compare answer time, quality and support effort with the current human-only workflow.",
+      status: "Pre-pilot", headline: "Establish the baseline before starting a pilot.",
+      explanation: "Measure the current human-only workflow first. Then define the success thresholds that a later internal pilot must meet.",
       gates: [
         { label: "Technical safety", value: "Ready", state: "pass" },
-        { label: "Baseline", value: "Set first", state: "review" },
-        { label: "Success threshold", value: "Define", state: "review" },
+        { label: "Baseline", value: "Measure now", state: "review" },
+        { label: "Success threshold", value: "Define next", state: "review" },
       ],
     },
   },
