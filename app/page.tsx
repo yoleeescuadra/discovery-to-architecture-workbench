@@ -56,7 +56,6 @@ type LensConfig = {
     status: string;
     headline: string;
     explanation: string;
-    gates: Array<{ label: string; value: string; state: "pass" | "review" }>;
   };
 };
 
@@ -81,13 +80,8 @@ const lenses: LensConfig[] = [
       ],
     },
     decision: {
-      status: "Internal pilot", headline: "Validate live retrieval before customer use.",
-      explanation: "Proceed with a human-reviewed internal pilot. Prove source ownership, version filtering and retrieval failure handling before customer exposure.",
-      gates: [
-        { label: "Source policy", value: "Ready", state: "pass" },
-        { label: "Citations", value: "Ready", state: "pass" },
-        { label: "Live retrieval", value: "Validate", state: "review" },
-      ],
+      status: "Pilot gate closed", headline: "Validate live retrieval before starting a pilot.",
+      explanation: "Evidence checks passed in the fixed test, but the overall gate stays closed until live retrieval is validated, identity routing passes, and business thresholds are defined.",
     },
   },
   {
@@ -110,13 +104,8 @@ const lenses: LensConfig[] = [
       ],
     },
     decision: {
-      status: "Internal only", headline: "Keep customer access blocked until verification is repeatable.",
-      explanation: "Run a human-reviewed internal iteration. Make identity verification routing repeatable before direct customer exposure.",
-      gates: [
-        { label: "Account safety", value: "Ready", state: "pass" },
-        { label: "Citations", value: "Ready", state: "pass" },
-        { label: "Identity routing", value: "Fix", state: "review" },
-      ],
+      status: "Pilot gate closed", headline: "Make identity routing reliable before starting a pilot.",
+      explanation: "Account data remained protected, but one verification route failed. The overall gate stays closed until this is corrected and the evidence and value gates are complete.",
     },
   },
   {
@@ -139,13 +128,8 @@ const lenses: LensConfig[] = [
       ],
     },
     decision: {
-      status: "Pre-pilot", headline: "Establish the baseline before starting a pilot.",
-      explanation: "Measure the current human-only workflow first. Then define the success thresholds that a later internal pilot must meet.",
-      gates: [
-        { label: "Technical safety", value: "Ready", state: "pass" },
-        { label: "Baseline", value: "Measure now", state: "review" },
-        { label: "Success threshold", value: "Define next", state: "review" },
-      ],
+      status: "Pilot gate closed", headline: "Define the business baseline before starting a pilot.",
+      explanation: "Technical checks alone do not prove value. The overall gate stays closed until the baseline and thresholds are defined and the evidence and identity gates are complete.",
     },
   },
 ];
@@ -167,6 +151,12 @@ const evidence = [
   ["NS-SEC-04", "Authorization", "The workflow is read-only and routes identity or security changes."],
   ["NS-ENT-07", "Entitlements", "Plan guidance stays separate from verified account facts."],
   ["NS-GOV-09", "Governance", "Current sources win; unresolved conflicts escalate."],
+];
+
+const pilotGates: Array<{ id: Lens; label: string; value: string; state: "review" }> = [
+  { id: "sources", label: "Live retrieval", value: "Validate", state: "review" },
+  { id: "identity", label: "Identity routing", value: "Fix", state: "review" },
+  { id: "value", label: "Baseline + thresholds", value: "Define", state: "review" },
 ];
 
 const categoryMarks: Record<string, string> = {
@@ -249,7 +239,7 @@ export default function Home() {
 
           {stage === "discovery" && (
             <section className="stage-screen focused-screen" aria-labelledby="discovery-title">
-              <div className="stage-heading"><span className="eyebrow">Discovery · choose one starting point</span><h1 id="discovery-title">What would you investigate first?</h1><p>Choose one question. The next screens show how it changes the design, test interpretation and final recommendation.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Discovery · choose one starting point</span><h1 id="discovery-title">What would you investigate first?</h1><p>Choose one question. Your lens changes the design emphasis and immediate next step, but all three checks determine overall readiness.</p></div>
               <div className="lens-choices">
                 {lenses.map((item) => (
                   <button key={item.id} type="button" className={lens === item.id ? "lens-card selected" : "lens-card"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id}>
@@ -284,7 +274,7 @@ export default function Home() {
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
               <div className="journey-trace"><small>Your journey</small><ol><li><span>1</span><div><small>Problem</small><b>Scattered support guidance</b></div></li><li><span>2</span><div><small>You chose</small><b>{designLens.label}</b></div></li><li><span>3</span><div><small>Design focus</small><b>{designLens.focusNode}</b></div></li><li><span>4</span><div><small>Recorded test</small><b>{designLens.test.traceResult}</b></div></li><li><span>5</span><div><small>Recommendation</small><b>{designLens.decision.status}</b></div></li></ol></div>
-              <div className="decision-copy"><span className="eyebrow">Recommendation · Based on your {designLens.label} choice</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><div className="decision-gates">{designLens.decision.gates.map((gate) => <div key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small></div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="decision-copy"><span className="eyebrow">Overall recommendation · {designLens.label} focus</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><p className="decision-scope">Your lens highlights the next action. The pilot gate uses all three checks below.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}

@@ -6,7 +6,7 @@ Discovery-to-Architecture Workbench is an independent AI solution-design portfol
 
 > Maya leads a customer-support team with scattered guidance and repetitive questions. Should she approve an AI pilot?
 
-The project demonstrates how an AI Solutions Architect can move from an ambiguous customer need to structured discovery, an evidence-backed architecture recommendation, measurable evaluation criteria, and a conditional pilot decision.
+The project demonstrates how an AI Solutions Architect can move from an ambiguous customer need to structured discovery, an evidence-backed architecture recommendation, measurable evaluation criteria, and a cross-lens pilot-readiness decision.
 
 ## Primary audience
 
@@ -20,11 +20,11 @@ The project demonstrates how an AI Solutions Architect can move from an ambiguou
 Visitors:
 
 1. Meet Maya and read her short business brief.
-2. Choose the discovery question they would investigate first.
-3. Compare their instinct with the Workbench's structured discovery gaps.
-4. Reveal a proposed architecture and inspect the evidence and trade-offs.
-5. Make their own pilot decision.
-6. Compare it with a rule-based recommendation.
+2. Choose the discovery lens they would investigate first.
+3. See how that lens changes the architecture emphasis.
+4. Inspect the recorded Gemini test through that lens.
+5. See the same overall pilot gate with a lens-specific next action.
+6. Inspect the recorded cases, source boundary, workflow, and metric definitions.
 
 ## V1 scope
 
@@ -32,7 +32,7 @@ Visitors:
 - Four synthetic approved source documents
 - Fifteen evaluation cases
 - One bounded architecture recommendation
-- Three inspectable evidence drawers
+- Four inspectable explanation drawers
 - One rule-based pilot decision
 - Static public experience with no visitor-triggered model calls
 
@@ -68,4 +68,3 @@ Yolee Escuadra framed the scenario, defined the discovery model, designed the ar
 - No real account, identity, or support data
 - No confidential documentation
 - No visitor-supplied data
-
