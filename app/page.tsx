@@ -42,7 +42,7 @@ type LensConfig = {
   headline: string;
   consequence: string;
   focusNode: string;
-  controls: string[];
+  controls: Array<{ label: string; help: string }>;
   test: {
     headline: string;
     explanation: string;
@@ -50,7 +50,7 @@ type LensConfig = {
     focusLabel: string;
     suiteContext: string;
     traceResult: string;
-    signals: Array<{ value: string; label: string; state: "pass" | "review" }>;
+    signals: Array<{ value: string; label: string; state: "pass" | "review"; help?: string }>;
   };
   decision: {
     status: string;
@@ -64,16 +64,20 @@ const lenses: LensConfig[] = [
   {
     id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?",
     headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.",
-    focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"],
+    focusNode: "Retrieve", controls: [
+      { label: "Approved sources", help: "Only current documents with a named owner may support an answer." },
+      { label: "Version filters", help: "Superseded documents are excluded from active retrieval." },
+      { label: "Required citations", help: "Each consequential factual claim must identify its supporting source." },
+    ],
     test: {
       headline: "All 15 cases passed the evidence checks.",
       explanation: "Grounding and citations passed in every case. Overall, 14 of 15 cases passed because one separate identity-routing case still needs review.",
       focusValue: "15/15", focusLabel: "Evidence checks passed",
       suiteContext: "Overall suite: 14 of 15 cases passed", traceResult: "15/15 evidence checks passed",
       signals: [
-        { value: "100%", label: "Grounding coverage", state: "pass" },
-        { value: "100%", label: "Citation quality", state: "pass" },
-        { value: "Not tested", label: "Live retrieval", state: "review" },
+        { value: "100%", label: "Grounding coverage", state: "pass", help: "Every consequential claim in the recorded responses was connected to supplied evidence." },
+        { value: "100%", label: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
+        { value: "Not tested", label: "Live retrieval", state: "review", help: "The experiment used a fixed set of four documents. It did not test a live search service, changing documents or retrieval outages." },
       ],
     },
     decision: {
@@ -89,16 +93,20 @@ const lenses: LensConfig[] = [
   {
     id: "identity", icon: "◎", label: "Identity", question: "Who is asking?",
     headline: "Account facts require a trusted identity.", consequence: "General guidance stays separate from verified account facts.",
-    focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"],
+    focusNode: "Guardrails", controls: [
+      { label: "Trusted session", help: "Verified login context is supplied by the system, not typed by the customer." },
+      { label: "Account match", help: "The account being discussed must match the authenticated customer account." },
+      { label: "Read-only actions", help: "The AI may explain or draft, but it cannot change account settings or entitlements." },
+    ],
     test: {
       headline: "14 of 15 test cases passed. One identity-routing case needs review.",
       explanation: "Gemini protected the account data, but answered instead of asking the customer to verify identity.",
       focusValue: "1", focusLabel: "Identity-routing case needs review",
       suiteContext: "Overall suite: 14 of 15 cases passed", traceResult: "1 identity-routing case to fix",
       signals: [
-        { value: "100%", label: "Account protection", state: "pass" },
-        { value: "100%", label: "Citation quality", state: "pass" },
-        { value: "67%", label: "Route stability", state: "review" },
+        { value: "100%", label: "Account protection", state: "pass", help: "No recorded response disclosed account-specific facts without trusted matching identity context." },
+        { value: "100%", label: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
+        { value: "67%", label: "Repeat-route consistency", state: "review", help: "Across three higher-risk cases, trials 2 and 3 were compared with trial 1. Four of six routes matched. 4 ÷ 6 = 66.7%, rounded to 67%. This checks route choice only, not the full answer." },
       ],
     },
     decision: {
@@ -114,16 +122,20 @@ const lenses: LensConfig[] = [
   {
     id: "value", icon: "↗", label: "Value", question: "What proves value?",
     headline: "People decide whether the pilot advances.", consequence: "Fixed thresholds, not model confidence, advance the pilot.",
-    focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"],
+    focusNode: "Human", controls: [
+      { label: "Baseline first", help: "Measure the current human-only workflow before comparing it with AI assistance." },
+      { label: "Success thresholds", help: "Set fixed targets for answer quality, time and support effort before the pilot." },
+      { label: "Pilot gate", help: "People decide whether to proceed only after the agreed targets are met." },
+    ],
     test: {
       headline: "The model test does not yet prove business value.",
       explanation: "Safety and grounding were measured, but there is no baseline for resolution time, answer quality or support effort.",
       focusValue: "0", focusLabel: "Business baselines defined",
       suiteContext: "Technical suite: 14 of 15 cases passed", traceResult: "Business value not measured",
       signals: [
-        { value: "14/15", label: "Technical cases", state: "pass" },
-        { value: "Not set", label: "Business baseline", state: "review" },
-        { value: "Not set", label: "Success threshold", state: "review" },
+        { value: "14/15", label: "Technical cases", state: "pass", help: "Fourteen recorded cases passed every enforced technical check. This does not measure business improvement." },
+        { value: "Not set", label: "Business baseline", state: "review", help: "No current measure exists for human-only answer time, quality or support effort." },
+        { value: "Not set", label: "Success threshold", state: "review", help: "The minimum improvement required to justify a pilot has not yet been defined." },
       ],
     },
     decision: {
@@ -140,6 +152,14 @@ const lenses: LensConfig[] = [
 
 const architecture = [
   ["?", "Brief"], ["≡", "Retrieve"], ["✦", "Gemini"], ["⌁", "Guardrails"], ["✓", "Human"],
+];
+
+const flowDefinitions = [
+  ["Brief", "The customer message and known context enter the workflow."],
+  ["Retrieve", "The system selects relevant passages from the approved document set."],
+  ["Gemini", "The model drafts a response using only the supplied passages and context."],
+  ["Guardrails", "Fixed rules limit disclosure, actions and unsupported claims outside the model."],
+  ["Human", "A support specialist reviews the draft and decides what happens next."],
 ];
 
 const evidence = [
@@ -243,12 +263,12 @@ export default function Home() {
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>The complete system stays in place. {designLens.focusNode} receives extra attention because {designLens.consequence.toLowerCase()}</p></div>
+              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label} <span className="info-tip"><button type="button" className="tip-trigger" aria-describedby="architecture-color-key">Color key <b>i</b></button><span className="tip-panel color-key" id="architecture-color-key" role="tooltip"><span><i className="key-swatch neutral" />Neutral: regular workflow step</span><span><i className="key-swatch model" />Light teal: Gemini model work</span><span><i className="key-swatch control" />Dark teal: fixed guardrails</span><span><i className="key-swatch selected" />Outline: your selected focus</span></span></span></span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>The complete system stays in place. {designLens.focusNode} receives extra attention because {designLens.consequence.toLowerCase()}</p></div>
               <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
                 {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""} ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
-              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>What changed · {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control}>{control}</i>)}</div></div></div>
-              <button type="button" className="quiet-link" onClick={() => setDrawer("method")}>Why this separation matters →</button>
+              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>What changed · {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control.label}>{control.label}</i>)}</div></div></div>
+              <button type="button" className="quiet-link" onClick={() => setDrawer("method")}>How this flow works →</button>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>See the recorded test <span>→</span></button></div>
             </section>
           )}
@@ -256,7 +276,7 @@ export default function Home() {
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
               <div className="evaluation-copy"><span className="eyebrow">Recorded test · Focus: {designLens.label}</span><h1 id="evaluation-title">{designLens.test.headline}</h1><p>{designLens.test.explanation}</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
-              <div className="result-visual"><div className="focus-result-card"><small>Your chosen focus</small><b>{designLens.test.focusValue}</b><strong>{designLens.test.focusLabel}</strong></div><div className="suite-context">{designLens.test.suiteContext}</div><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
+              <div className="result-visual"><div className="focus-result-card"><small>Your chosen focus</small><b>{designLens.test.focusValue}</b><strong>{designLens.test.focusLabel}</strong></div><div className="suite-context">{designLens.test.suiteContext}</div><div className="result-signals">{designLens.test.signals.map((signal, index) => { const helpId = `metric-help-${designLens.id}-${index}`; return <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}{signal.help && <span className="info-tip metric-tip"><button type="button" className="tip-trigger icon-only" aria-label={`What ${signal.label} means`} aria-describedby={helpId}>i</button><span className="tip-panel" id={helpId} role="tooltip">{signal.help}</span></span>}</b><small>{signal.label}</small></div>; })}</div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>See the recommendation <span>→</span></button></div>
             </section>
           )}
@@ -276,10 +296,11 @@ export default function Home() {
       {drawer && (
         <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setDrawer(null); }}>
           <aside className={`evidence-drawer ${drawer === "cases" ? "wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-            <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
+            <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "How the flow works"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
 
             {drawer === "cases" && <div className="drawer-body case-body">
               <div className="case-context"><span>What is being tested</span><b>Gemini drafts the Northstar response. Fixed checks compare it with the expected action, evidence and safety rules.</b><small>Gemini 3.5 Flash-Lite · recorded prompt · audited rubric v3.1</small></div>
+              <div className="drawer-help-row"><span className="info-tip"><button type="button" className="tip-trigger" aria-describedby="route-key-help">Route key <b>i</b></button><span className="tip-panel" id="route-key-help" role="tooltip"><strong>Answer</strong>: respond from evidence. <strong>Ask</strong>: request missing information. <strong>Block</strong>: refuse a prohibited request. <strong>Escalate</strong>: send the case to a human workflow.</span></span><span className="info-tip"><button type="button" className="tip-trigger" aria-describedby="source-term-help">Retrieved vs cited <b>i</b></button><span className="tip-panel" id="source-term-help" role="tooltip"><strong>Retrieved</strong> means the sources supplied to Gemini. <strong>Cited</strong> means the sources Gemini identified as support for its claims.</span></span></div>
               <div className="case-filters" aria-label="Filter cases">{(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? `All ${primaryResults.length}` : filter === "passed" ? `Passed ${passedCount}` : `Review ${reviewCount}`}</button>)}</div>
               <div className="case-list">{filteredCases.map((testCase) => { const { result } = testCase; const open = expandedCase === testCase.id; return <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
                 <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}><span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span><span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span><span className="route-pair"><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span><span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span><span className="expand-mark">{open ? "−" : "+"}</span></button>
@@ -289,7 +310,7 @@ export default function Home() {
 
             {drawer === "evidence" && <div className="drawer-body"><div className="case-context"><span>Knowledge boundary</span><b>Four current, owned documents support every public claim.</b></div><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
 
-            {drawer === "method" && <div className="drawer-body method-body"><div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret, draft, cite</strong></div></div><div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, authorize actions, release the pilot</strong></div></div><section><small>Design choice</small><h3>Separate probabilistic work from deterministic control.</h3><p>The model proposes. Evidence, account boundaries, and release thresholds remain externally enforced.</p></section></div>}
+            {drawer === "method" && <div className="drawer-body method-body"><section className="flow-glossary"><small>Five-step workflow</small><div>{flowDefinitions.map(([label, description], index) => <article key={label}><span>{index + 1}</span><p><b>{label}</b>{description}</p></article>)}</div></section><div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret the request, draft an answer and cite supplied evidence</strong></div></div><div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, change accounts or decide whether to launch</strong></div></div><section><small>Why separate these roles?</small><h3>Let Gemini draft. Keep approvals outside the model.</h3><p>Gemini handles language. Fixed system rules and people control evidence, account boundaries and release decisions.</p></section><section className="control-glossary"><small>Controls added by your {designLens.label} choice</small><div>{designLens.controls.map((control) => <article key={control.label}><b>{control.label}</b><p>{control.help}</p></article>)}</div></section></div>}
           </aside>
         </div>
       )}
