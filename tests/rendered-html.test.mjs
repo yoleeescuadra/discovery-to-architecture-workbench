@@ -103,7 +103,10 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Recorded test/);
   assert.match(page, /Four of six routes matched/);
   assert.match(page, /rounded to 67%/);
-  assert.match(page, /Fixed checks compare it with the expected action, evidence and safety rules\./);
+  assert.match(page, /For Maya.*fictional software product, Northstar/s);
+  assert.match(page, /Fixed checks compare its route, evidence use and safety controls with the expected result\./);
+  assert.match(page, /SSO<\/strong>: single sign-on/);
+  assert.match(page, /MFA<\/strong>: multi-factor authentication/);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
