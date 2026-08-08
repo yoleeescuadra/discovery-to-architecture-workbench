@@ -34,10 +34,10 @@ const stages: Array<{ id: Stage; label: string }> = [
   { id: "decision", label: "Decide" },
 ];
 
-const lenses: Array<{ id: Lens; icon: string; label: string; question: string; consequence: string; focusNode: string; controls: string[] }> = [
-  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", consequence: "Only current, owned guidance enters retrieval.", focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"] },
-  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", consequence: "General guidance stays separate from verified account facts.", focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"] },
-  { id: "value", icon: "↗", label: "Value", question: "What proves value?", consequence: "Fixed thresholds, not model confidence, advance the pilot.", focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"] },
+const lenses: Array<{ id: Lens; icon: string; label: string; question: string; headline: string; consequence: string; focusNode: string; controls: string[] }> = [
+  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.", focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"] },
+  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", headline: "Account facts require a trusted identity.", consequence: "General guidance stays separate from verified account facts.", focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"] },
+  { id: "value", icon: "↗", label: "Value", question: "What proves value?", headline: "People decide whether the pilot advances.", consequence: "Fixed thresholds, not model confidence, advance the pilot.", focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"] },
 ];
 
 const architecture = [
@@ -115,7 +115,7 @@ export default function Home() {
                 <span className="eyebrow">Fictional client challenge · Meet Maya</span>
                 <h1 id="brief-title">Can AI turn scattered guidance into answers Maya can trust?</h1>
                 <p>Take the architect&apos;s seat: clarify the need, shape a grounded design, test Gemini, and make the pilot call.</p>
-                <blockquote><small>Maya&apos;s constraint</small><span>Keep people in control—even when an AI answer sounds confident.</span></blockquote>
+                <blockquote><small>Maya&apos;s constraint</small><span>Keep people in control, even when an AI answer sounds confident.</span></blockquote>
                 <button type="button" className="primary-action" onClick={() => move("discovery")}>Start the discovery <span>→</span></button>
               </div>
               <div className="scatter-visual" role="img" aria-label="Four scattered information sources surround Maya's support team">
@@ -145,7 +145,7 @@ export default function Home() {
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Proposed architecture · {designLens.label} lens</span><h1 id="architecture-title">Same core. Different control priority.</h1><p>{designLens.focusNode} moves into focus without removing the controls every safe design needs.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Design result · {designLens.label} lens</span><h1 id="architecture-title">{designLens.label} lens selected: {designLens.headline}</h1><p>{designLens.consequence} The {designLens.focusNode} stage receives added emphasis.</p></div>
               <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
                 {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""} ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
@@ -157,7 +157,7 @@ export default function Home() {
 
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
-              <div className="evaluation-copy"><span className="eyebrow">Recorded Gemini test · runtime prompt</span><h1 id="evaluation-title">Safe answers held.<br />Identity routing wavered.</h1><p>Fourteen cases met every enforced criterion. In one trial Gemini protected account data but failed to ask for verification.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
+              <div className="evaluation-copy"><span className="eyebrow">Test result · recorded Gemini evaluation</span><h1 id="evaluation-title">14 of 15 test cases passed. One identity-routing case needs review.</h1><p>Gemini protected the account data, but answered instead of asking the customer to verify identity.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
               <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>cases passed</small></span></div><div className="result-signals"><div className="signal pass"><span>✓</span><b>100%</b><small>Safety constraints</small></div><div className="signal pass"><span>✓</span><b>100%</b><small>Citation quality</small></div><div className="signal review"><span>↻</span><b>67%</b><small>Route stability</small></div></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>Make the pilot call <span>→</span></button></div>
             </section>
