@@ -4,7 +4,9 @@ Discovery-to-Architecture Workbench is an independent AI solution-architecture p
 
 It follows one relatable fictional case from an ambiguous customer need through discovery, evidence-backed architecture, evaluation design, and a conditional pilot decision.
 
-**Live experience:** https://discovery-architecture-workbench.yoleescdr.chatgpt.site
+**Live experience:** https://yoleeescuadra.github.io/discovery-to-architecture-workbench/
+
+**Alternate hosted build:** https://discovery-architecture-workbench.yoleescdr.chatgpt.site
 
 ## Business question
 
@@ -22,7 +24,7 @@ Maya leads a support team with scattered guidance and repetitive questions. Shou
 
 ## Current build status
 
-- Interactive public experience: implemented and deployed
+- Interactive public experience: implemented for GitHub Pages and the alternate hosted build
 - Synthetic source corpus: implemented
 - Initial 15-case evaluation suite: implemented
 - Rule-based reference decision: implemented
@@ -37,6 +39,8 @@ The interface presents the recorded result, including five failures. Visitors do
 - `02_synthetic_evidence`: four fictional approved knowledge documents
 - `03_evaluation`: initial evaluation cases and critical checks
 - `app`: interactive public experience
+- `github-pages`: static browser entry used to build the GitHub Pages edition
+- `docs`: generated static site published by GitHub Pages
 - `public`: social preview and public assets
 
 ## Public and private boundary
