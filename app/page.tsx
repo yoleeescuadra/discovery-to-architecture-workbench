@@ -133,7 +133,7 @@ export default function Home() {
           )}
 
           {stage === "architecture" && (
-            <section className="stage-screen focused-screen" aria-labelledby="architecture-title">
+            <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
               <div className="stage-heading"><span className="eyebrow">Proposed architecture</span><h1 id="architecture-title">Gemini drafts. The system decides.</h1><p>Useful AI sits inside boundaries it cannot override.</p></div>
               <div className="architecture-flow" aria-label="Brief flows through retrieval, Gemini, guardrails, and human review">
                 {architecture.map(([icon, label], index) => <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""}`}><span>{icon}</span><b>{label}</b></div>{index < architecture.length - 1 && <i>→</i>}</div>)}

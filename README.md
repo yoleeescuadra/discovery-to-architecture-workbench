@@ -4,6 +4,8 @@ Discovery-to-Architecture Workbench is an independent AI solution-architecture p
 
 It follows one relatable fictional case from an ambiguous customer need through discovery, evidence-backed architecture, evaluation design, and a conditional pilot decision.
 
+**Live experience:** https://discovery-architecture-workbench.yoleescdr.chatgpt.site
+
 ## Business question
 
 Maya leads a support team with scattered guidance and repetitive questions. Should she approve an AI-assisted support pilot?
@@ -20,14 +22,14 @@ Maya leads a support team with scattered guidance and repetitive questions. Shou
 
 ## Current build status
 
-- Interactive public experience: implemented
+- Interactive public experience: implemented and deployed
 - Synthetic source corpus: implemented
 - Initial 15-case evaluation suite: implemented
 - Rule-based reference decision: implemented
 - Recorded Gemini experiment: completed with Gemini 3.5 Flash-Lite (21 controlled calls; 10/15 primary cases passed)
-- Expansion to approximately 30 evaluated cases: planned before LinkedIn launch
+- Expansion beyond the initial 15-case pilot suite: future iteration
 
-The interface presents the recorded result, including five failures. It does not treat a model run as production validation: the customer-facing release gate remains closed.
+The interface presents the recorded result, including five failures. Visitors do not trigger live model calls. The project does not treat a model run as production validation: the customer-facing release gate remains closed.
 
 ## Project structure
 
