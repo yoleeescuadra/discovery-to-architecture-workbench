@@ -79,6 +79,11 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Design consequence/);
   assert.match(page, /Because you chose/);
   assert.match(page, /What changed/);
+  assert.match(page, /Light teal: Gemini model work/);
+  assert.match(page, /Dark teal: fixed guardrails/);
+  assert.match(page, /The system selects relevant passages from the approved document set\./);
+  assert.match(page, /Retrieved.*sources supplied to Gemini/s);
+  assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
   assert.match(page, /People decide whether the pilot advances\./);
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
@@ -96,6 +101,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Recommendation · Based on your/);
   assert.match(page, /Your journey/);
   assert.match(page, /Recorded test/);
+  assert.match(page, /Four of six routes matched/);
+  assert.match(page, /rounded to 67%/);
   assert.match(page, /Fixed checks compare it with the expected action, evidence and safety rules\./);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
