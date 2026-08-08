@@ -81,7 +81,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
   assert.match(page, /Success thresholds/);
-  assert.match(page, /Grounding and citation checks passed in all 15 cases\./);
+  assert.match(page, /All 15 cases passed the evidence checks\./);
+  assert.match(page, /one separate identity-routing case still needs review/i);
   assert.match(page, /14 of 15 cases passed/i);
   assert.match(page, /The model test does not yet prove business value\./);
   assert.match(page, /Validate live retrieval before customer use\./);

@@ -63,9 +63,9 @@ const lenses: LensConfig[] = [
     headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.",
     focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"],
     test: {
-      headline: "Grounding and citation checks passed in all 15 cases.",
-      explanation: "The bounded test used four approved documents. Live indexing, version filters and retrieval outages still need validation.",
-      scoreLabel: "technical cases",
+      headline: "All 15 cases passed the evidence checks.",
+      explanation: "Grounding and citations passed in every case. Overall, 14 of 15 cases passed because one separate identity-routing case still needs review.",
+      scoreLabel: "overall cases passed",
       signals: [
         { value: "100%", label: "Grounding coverage", state: "pass" },
         { value: "100%", label: "Citation quality", state: "pass" },
