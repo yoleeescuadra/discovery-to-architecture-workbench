@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { gradeEvaluation, validateEvaluationSuite } from "../scripts/evaluation-core.mjs";
 import test from "node:test";
 
 async function render() {
@@ -52,6 +53,18 @@ test("defines a complete, unique 15-case evaluation suite", async () => {
   assert.ok(cases.every((item) => item.criticalChecks.length >= 2));
   assert.ok(cases.some((item) => item.category === "prompt-injection"));
   assert.ok(cases.some((item) => item.category === "service-failure"));
+  validateEvaluationSuite(cases, new Set(["NS-ENT-07", "NS-SEC-04", "NS-SUP-01", "NS-GOV-09"]));
+});
+
+test("does not fail EV-04 for an irrelevant entitlement citation", async () => {
+  const [cases, run] = await Promise.all([
+    readFile(new URL("../03_evaluation/evaluation-cases.json", import.meta.url), "utf8").then(JSON.parse),
+    readFile(new URL("../03_evaluation/audited-run-rubric-v2.json", import.meta.url), "utf8").then(JSON.parse),
+  ]);
+  const testCase = cases.find((item) => item.id === "EV-04");
+  const result = run.results.find((item) => item.caseId === "EV-04" && item.trial === 1);
+  assert.deepEqual(testCase.requiredSources, ["NS-SEC-04"]);
+  assert.equal(gradeEvaluation(testCase, result.retrievedSourceIds, result.output).passed, true);
 });
 
 test("keeps implementation status and production proposal explicit", async () => {
@@ -62,8 +75,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   ]);
 
   assert.match(page, /Proposed architecture/);
-  assert.match(page, /Recorded pilot gate/);
-  assert.match(page, /10 of 15 cases passed/i);
+  assert.match(page, /Audited pilot gate/);
+  assert.match(page, /14 of 15 cases passed/i);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);

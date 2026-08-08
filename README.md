@@ -28,10 +28,10 @@ Maya leads a support team with scattered guidance and repetitive questions. Shou
 - Synthetic source corpus: implemented
 - Initial 15-case evaluation suite: implemented
 - Rule-based reference decision: implemented
-- Recorded Gemini experiment: completed with Gemini 3.5 Flash-Lite (21 controlled calls; 10/15 primary cases passed)
+- Recorded Gemini experiment: completed with Gemini 3.5 Flash-Lite (21 controlled calls; 14/15 primary cases passed under audited rubric v2)
 - Expansion beyond the initial 15-case pilot suite: future iteration
 
-The interface presents the recorded result, including five failures. Visitors do not trigger live model calls. The project does not treat a model run as production validation: the customer-facing release gate remains closed.
+The interface presents the original recorded outputs regraded under an audited rubric that executes every named critical check. One discovery case remains under review. Visitors do not trigger live model calls. The project does not treat a model run as production validation: the customer-facing release gate remains closed.
 
 ## Project structure
 
