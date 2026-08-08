@@ -51,7 +51,7 @@ const lenses: Array<{ id: Lens; icon: string; label: string; question: string; e
     icon: "↗",
     label: "Value",
     question: "What proves value?",
-    emphasis: "A fixed test suite and release thresholds decide whether the pilot advances—not model confidence.",
+    emphasis: "A fixed test suite and release thresholds decide whether the pilot advances, not model confidence.",
   },
 ];
 
@@ -127,7 +127,7 @@ export default function Home() {
             <span className="eyebrow">Meet Maya, a support lead · 5-minute case</span>
             <h1>Can she trust AI with customer answers?</h1>
           </div>
-          <p>Scattered guidance. Repeated questions. One hard rule: <strong>AI may draft—not act.</strong></p>
+          <p>Scattered guidance. Repeated questions. One hard rule: <strong>AI may draft. It may not act.</strong></p>
         </div>
 
         <div className="glance-grid">
@@ -197,7 +197,7 @@ export default function Home() {
           <div><span className="rail-dot pass" />Internal, human-reviewed iteration</div>
           <div><span className="rail-dot fail" />Direct customer exposure</div>
           <button type="button" onClick={() => setDrawer("evidence")}>4 approved sources <span>→</span></button>
-          <small>Recorded on Gemini 3.5 Flash-Lite · synthetic evidence · no live visitor calls</small>
+          <small>Recorded on Gemini 3.5 Flash-Lite · 4-document evidence set · no live visitor calls</small>
         </div>
       </section>
 

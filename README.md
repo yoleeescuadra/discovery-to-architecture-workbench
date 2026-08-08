@@ -31,11 +31,11 @@ The interface presents the recorded result, including five failures. It does not
 
 ## Project structure
 
-- `01_foundation` — project purpose, audience, scope, and boundaries
-- `02_synthetic_evidence` — four fictional approved knowledge documents
-- `03_evaluation` — initial evaluation cases and critical checks
-- `app` — interactive public experience
-- `public` — social preview and public assets
+- `01_foundation`: project purpose, audience, scope, and boundaries
+- `02_synthetic_evidence`: four fictional approved knowledge documents
+- `03_evaluation`: initial evaluation cases and critical checks
+- `app`: interactive public experience
+- `public`: social preview and public assets
 
 ## Public and private boundary
 
