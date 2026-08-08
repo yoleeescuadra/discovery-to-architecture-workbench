@@ -112,11 +112,11 @@ export default function Home() {
           {stage === "brief" && (
             <section className="stage-screen brief-screen" aria-labelledby="brief-title">
               <div className="brief-copy">
-                <span className="eyebrow">Meet Maya, a support lead</span>
-                <h1 id="brief-title">Her team knows the answers.<br />Finding them is the problem.</h1>
-                <p>Product guidance is scattered across documents, policies, and troubleshooting notes.</p>
-                <blockquote>“Could AI help us answer consistently without taking control away from people?”</blockquote>
-                <button type="button" className="primary-action" onClick={() => move("discovery")}>Step into Maya&apos;s brief <span>→</span></button>
+                <span className="eyebrow">Fictional client challenge · Meet Maya</span>
+                <h1 id="brief-title">Can AI turn scattered guidance into answers Maya can trust?</h1>
+                <p>Take the architect&apos;s seat: clarify the need, shape a grounded design, test Gemini, and make the pilot call.</p>
+                <blockquote><small>Maya&apos;s constraint</small><span>Keep people in control—even when an AI answer sounds confident.</span></blockquote>
+                <button type="button" className="primary-action" onClick={() => move("discovery")}>Start the discovery <span>→</span></button>
               </div>
               <div className="scatter-visual" role="img" aria-label="Four scattered information sources surround Maya's support team">
                 <div className="source-card source-one"><span>≡</span><b>Product docs</b></div>
