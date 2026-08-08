@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import evaluationCases from "@/03_evaluation/evaluation-cases.json";
 import recordedRun from "@/03_evaluation/recorded-run-2026-08-07T18-31-55-434Z.json";
 
+type Stage = "brief" | "discovery" | "architecture" | "evaluation" | "decision";
 type Lens = "sources" | "identity" | "value";
 type Drawer = "cases" | "evidence" | "method" | null;
 type CaseFilter = "all" | "passed" | "review";
@@ -13,246 +14,173 @@ type RecordedResult = {
   trial: number;
   expectedRoute: string;
   retrievedSourceIds: string[];
-  output: {
-    route: string;
-    response: string;
-    citedSourceIds: string[];
-    uncertainty: string;
-  };
+  output: { route: string; response: string; citedSourceIds: string[]; uncertainty: string };
   grade: { passed: boolean };
 };
 
-const primaryResults = (recordedRun.results as RecordedResult[]).filter(
-  (result) => result.trial === 1,
-);
-
+const primaryResults = (recordedRun.results as RecordedResult[]).filter((result) => result.trial === 1);
 const caseRows = evaluationCases.map((testCase) => ({
   ...testCase,
   result: primaryResults.find((result) => result.caseId === testCase.id)!,
 }));
 
-const lenses: Array<{ id: Lens; icon: string; label: string; question: string; emphasis: string }> = [
-  {
-    id: "sources",
-    icon: "≡",
-    label: "Evidence",
-    question: "What can we trust?",
-    emphasis: "Versioned retrieval becomes the first control: only current, owned guidance enters the active index.",
-  },
-  {
-    id: "identity",
-    icon: "◎",
-    label: "Identity",
-    question: "Who is asking?",
-    emphasis: "General guidance stays separate from verified account facts; account-changing actions remain outside the AI path.",
-  },
-  {
-    id: "value",
-    icon: "↗",
-    label: "Value",
-    question: "What proves value?",
-    emphasis: "A fixed test suite and release thresholds decide whether the pilot advances, not model confidence.",
-  },
+const stages: Array<{ id: Stage; label: string }> = [
+  { id: "brief", label: "Problem" },
+  { id: "discovery", label: "Discovery" },
+  { id: "architecture", label: "Design" },
+  { id: "evaluation", label: "Test" },
+  { id: "decision", label: "Decide" },
+];
+
+const lenses: Array<{ id: Lens; icon: string; label: string; question: string; consequence: string }> = [
+  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", consequence: "Only current, owned guidance enters retrieval." },
+  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", consequence: "General guidance stays separate from verified account facts." },
+  { id: "value", icon: "↗", label: "Value", question: "What proves value?", consequence: "Fixed thresholds, not model confidence, advance the pilot." },
 ];
 
 const architecture = [
-  ["01", "?", "Brief", "Need + context"],
-  ["02", "≡", "Retrieve", "Approved only"],
-  ["03", "✦", "Gemini", "Draft + cite"],
-  ["04", "⌁", "Guardrails", "Block + route"],
-  ["05", "✓", "Human", "Review + send"],
+  ["?", "Brief"], ["≡", "Retrieve"], ["✦", "Gemini"], ["⌁", "Guardrails"], ["✓", "Human"],
 ];
-
-const metrics = [
-  ["Route", 87],
-  ["Grounding", 100],
-  ["Citations", 73],
-  ["Constraints", 100],
-  ["Stability", 100],
-] as const;
 
 const evidence = [
   ["NS-SUP-01", "Answer standard", "Every consequential claim cites approved evidence."],
-  ["NS-SEC-04", "Authorization", "Read-only workflow; identity and security changes are routed."],
-  ["NS-ENT-07", "Entitlements", "Plan guidance is separate from verified account facts."],
-  ["NS-GOV-09", "Governance", "Current owned sources win; unresolved conflicts escalate."],
+  ["NS-SEC-04", "Authorization", "The workflow is read-only and routes identity or security changes."],
+  ["NS-ENT-07", "Entitlements", "Plan guidance stays separate from verified account facts."],
+  ["NS-GOV-09", "Governance", "Current sources win; unresolved conflicts escalate."],
 ];
 
 const categoryMarks: Record<string, string> = {
-  grounding: "G",
-  identity: "ID",
-  authorization: "A",
-  "missing-evidence": "?",
-  "document-governance": "V",
-  security: "!",
-  discovery: "D",
-  "service-failure": "↻",
-  "prompt-injection": "↯",
+  grounding: "G", identity: "ID", authorization: "A", "missing-evidence": "?",
+  "document-governance": "V", security: "!", discovery: "D", "service-failure": "↻", "prompt-injection": "↯",
 };
 
 export default function Home() {
-  const [lens, setLens] = useState<Lens>("identity");
+  const [stage, setStage] = useState<Stage>("brief");
+  const [lens, setLens] = useState<Lens | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(null);
   const [caseFilter, setCaseFilter] = useState<CaseFilter>("all");
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
 
   useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawer(null);
-    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setDrawer(null); };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, []);
 
-  const activeLens = lenses.find((item) => item.id === lens)!;
+  const stageIndex = stages.findIndex((item) => item.id === stage);
+  const activeLens = lenses.find((item) => item.id === lens);
   const filteredCases = useMemo(
-    () => caseRows.filter(({ result }) =>
-      caseFilter === "all" || (caseFilter === "passed" ? result.grade.passed : !result.grade.passed)),
+    () => caseRows.filter(({ result }) => caseFilter === "all" || (caseFilter === "passed" ? result.grade.passed : !result.grade.passed)),
     [caseFilter],
   );
+
+  const move = (next: Stage) => setStage(next);
 
   return (
     <main className="site-shell">
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Discovery-to-Architecture Workbench home">
-          <span className="brand-mark" aria-hidden="true">D→A</span>
-          <span><strong>Discovery-to-Architecture</strong><small>AI solution workbench</small></span>
+        <a className="brand" href="#top" onClick={() => setStage("brief")} aria-label="Discovery-to-Architecture Workbench home">
+          <span className="brand-mark">D→A</span><span><strong>Discovery-to-Architecture</strong><small>AI solution workbench</small></span>
         </a>
-        <div className="header-note"><span className="status-dot" />Independent project · synthetic case</div>
+        <div className="header-note"><span className="status-dot" />Independent project · fictional case</div>
       </header>
 
       <section className="workbench" id="top">
-        <div className="hero-strip">
-          <div>
-            <span className="eyebrow">Meet Maya, a support lead · 5-minute case</span>
-            <h1>Can she trust AI with customer answers?</h1>
+        <nav className="progress-nav" aria-label="Case progress">
+          <div className="progress-steps" role="tablist" aria-label="Workbench stages">
+            {stages.map((item, index) => (
+              <button key={item.id} type="button" role="tab" aria-selected={stage === item.id} className={`${stage === item.id ? "active" : ""} ${index < stageIndex ? "complete" : ""}`} onClick={() => move(item.id)}>
+                <span>{index < stageIndex ? "✓" : index + 1}</span><small>{item.label}</small>
+              </button>
+            ))}
           </div>
-          <p>Scattered guidance. Repeated questions. One hard rule: <strong>AI may draft. It may not act.</strong></p>
-        </div>
+          <div className="trace-chip"><span>Maya</span><b>Scattered support guidance</b>{activeLens && <><i>›</i><span>Your lens</span><b>{activeLens.label}</b></>}</div>
+        </nav>
 
-        <div className="glance-grid">
-          <section className="story-card brief-card" aria-labelledby="brief-title">
-            <div className="card-label"><span>01</span> Customer need</div>
-            <div className="maya-row">
-              <div className="avatar" aria-hidden="true">M</div>
-              <div><h2 id="brief-title">Maya needs consistency</h2><p>without losing control</p></div>
-            </div>
-            <div className="need-stack" aria-label="Customer requirements">
-              <div><span className="need-icon">↓</span><strong>Less searching</strong><small>Answers live in four places</small></div>
-              <div><span className="need-icon">⌕</span><strong>Visible evidence</strong><small>Cite every important claim</small></div>
-              <div><span className="need-icon">⊘</span><strong>No account actions</strong><small>Drafts remain human-reviewed</small></div>
-            </div>
-            <div className="lens-prompt">
-              <span>What would you investigate first?</span>
-              <div className="lens-grid">
+        <div className="stage-frame">
+          {stage === "brief" && (
+            <section className="stage-screen brief-screen" aria-labelledby="brief-title">
+              <div className="brief-copy">
+                <span className="eyebrow">Meet Maya, a support lead</span>
+                <h1 id="brief-title">Her team knows the answers.<br />Finding them is the problem.</h1>
+                <p>Product guidance is scattered across documents, policies, and troubleshooting notes.</p>
+                <blockquote>“Could AI help us answer consistently without taking control away from people?”</blockquote>
+                <button type="button" className="primary-action" onClick={() => move("discovery")}>Step into Maya&apos;s brief <span>→</span></button>
+              </div>
+              <div className="scatter-visual" role="img" aria-label="Four scattered information sources surround Maya's support team">
+                <div className="source-card source-one"><span>≡</span><b>Product docs</b></div>
+                <div className="source-card source-two"><span>⌁</span><b>Policies</b></div>
+                <div className="source-card source-three"><span>?</span><b>Support notes</b></div>
+                <div className="source-card source-four"><span>✓</span><b>Plan guide</b></div>
+                <div className="maya-visual"><span>M</span><b>Maya&apos;s team</b><small>Where is the trusted answer?</small></div>
+                <div className="orbit orbit-one" /><div className="orbit orbit-two" />
+              </div>
+            </section>
+          )}
+
+          {stage === "discovery" && (
+            <section className="stage-screen focused-screen" aria-labelledby="discovery-title">
+              <div className="stage-heading"><span className="eyebrow">Discovery · one choice</span><h1 id="discovery-title">What would you investigate first?</h1><p>Your starting point changes what the architecture emphasizes.</p></div>
+              <div className="lens-choices">
                 {lenses.map((item) => (
-                  <button key={item.id} type="button" className={lens === item.id ? "lens active" : "lens"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id} title={item.question}>
-                    <b aria-hidden="true">{item.icon}</b><small>{item.label}</small>
+                  <button key={item.id} type="button" className={lens === item.id ? "lens-card selected" : "lens-card"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id}>
+                    <span>{item.icon}</span><small>{item.label}</small><strong>{item.question}</strong>{lens === item.id && <i>Selected</i>}
                   </button>
                 ))}
               </div>
-            </div>
-          </section>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("brief")}>← Problem</button><button type="button" className="primary-action" disabled={!lens} onClick={() => move("architecture")}>See the design <span>→</span></button></div>
+            </section>
+          )}
 
-          <section className="story-card architecture-card" aria-labelledby="architecture-title">
-            <div className="card-label"><span>02</span> Proposed architecture</div>
-            <div className="section-heading">
-              <div><h2 id="architecture-title">Useful AI. External control.</h2><p>Each boundary has one job.</p></div>
-              <button type="button" className="mini-link" onClick={() => setDrawer("method")}>Why this design →</button>
-            </div>
-            <div className="architecture-map" aria-label="Request flows from brief through retrieval, Gemini, guardrails, and human review">
-              {architecture.map(([step, icon, title, subtitle], index) => (
-                <div className="map-step-wrap" key={step}>
-                  <div className={`map-step ${title === "Gemini" ? "model" : ""} ${title === "Guardrails" ? "control" : ""}`}>
-                    <span className="map-index">{step}</span><b className="map-icon" aria-hidden="true">{icon}</b><strong>{title}</strong><small>{subtitle}</small>
-                  </div>
-                  {index < architecture.length - 1 && <span className="map-arrow" aria-hidden="true">→</span>}
-                </div>
-              ))}
-            </div>
-            <div className="lens-result">
-              <span className="lens-symbol" aria-hidden="true">{activeLens.icon}</span>
-              <div><small>Your lens · {activeLens.label}</small><strong>{activeLens.question}</strong><p>{activeLens.emphasis}</p></div>
-            </div>
-            <div className="control-line"><span>Model</span><b>interprets + drafts</b><i>→</i><span>System</span><b>authorizes + releases</b></div>
-          </section>
+          {stage === "architecture" && (
+            <section className="stage-screen focused-screen" aria-labelledby="architecture-title">
+              <div className="stage-heading"><span className="eyebrow">Proposed architecture</span><h1 id="architecture-title">Gemini drafts. The system decides.</h1><p>Useful AI sits inside boundaries it cannot override.</p></div>
+              <div className="architecture-flow" aria-label="Brief flows through retrieval, Gemini, guardrails, and human review">
+                {architecture.map(([icon, label], index) => <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""}`}><span>{icon}</span><b>{label}</b></div>{index < architecture.length - 1 && <i>→</i>}</div>)}
+              </div>
+              <div className="architecture-insight"><span>{activeLens?.icon ?? "◎"}</span><div><small>Because you chose {activeLens?.label ?? "Identity"}</small><strong>{activeLens?.consequence ?? lenses[1].consequence}</strong></div></div>
+              <button type="button" className="quiet-link" onClick={() => setDrawer("method")}>Why this separation matters →</button>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>Test the design <span>→</span></button></div>
+            </section>
+          )}
 
-          <section className="story-card gate-card" aria-labelledby="gate-title">
-            <div className="card-label"><span>03</span> Recorded pilot gate</div>
-            <div className="gate-hero">
-              <div className="score-ring" aria-label="10 of 15 cases passed"><span><b>10</b>/15</span></div>
-              <div><span className="blocked-pill">Customer-facing blocked</span><h2 id="gate-title">Improve, then retest</h2><p>Safe constraints held. Citations did not.</p></div>
-            </div>
-            <div className="metric-list" aria-label="Evaluation scorecard">
-              {metrics.map(([label, value]) => (
-                <div key={label}><span>{label}</span><div className="metric-track"><i style={{ width: `${value}%` }} /></div><b>{value}%</b></div>
-              ))}
-            </div>
-            <div className="failure-signal"><span>5</span><p><strong>cases need review</strong>3 citation · 2 discovery</p></div>
-            <button type="button" className="case-cta" onClick={() => setDrawer("cases")}><span className="case-grid-icon" aria-hidden="true">▦</span><span><strong>Inspect all 15 test cases</strong><small>Expected vs actual · sources · response</small></span><b>→</b></button>
-          </section>
+          {stage === "evaluation" && (
+            <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
+              <div className="evaluation-copy"><span className="eyebrow">Recorded pilot gate</span><h1 id="evaluation-title">Safe behavior held.<br />Answer quality did not.</h1><p>The model passed every safety constraint, but missed required citations and two discovery routes.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · citations</small><i>→</i></button></div>
+              <div className="result-visual"><div className="score-ring" aria-label="10 of 15 cases passed"><span><b>10</b>/15<small>cases passed</small></span></div><div className="result-signals"><div className="signal pass"><span>✓</span><b>100%</b><small>Safety constraints</small></div><div className="signal review"><span>!</span><b>73%</b><small>Citation quality</small></div><div className="signal review"><span>?</span><b>2</b><small>Discovery misses</small></div></div></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>Make the pilot call <span>→</span></button></div>
+            </section>
+          )}
+
+          {stage === "decision" && (
+            <section className="stage-screen decision-screen" aria-labelledby="decision-title">
+              <div className="decision-symbol">↗<span>Internal only</span></div>
+              <div className="decision-copy"><span className="eyebrow">Pilot decision</span><h1 id="decision-title">Continue learning.<br />Keep customers out for now.</h1><p>Run a human-reviewed internal iteration. Fix citation enforcement and discovery routing before direct customer exposure.</p><div className="decision-gates"><div><span className="gate-dot pass" /><b>Safety</b><small>Ready</small></div><div><span className="gate-dot review" /><b>Citations</b><small>Fix</small></div><div><span className="gate-dot review" /><b>Discovery</b><small>Fix</small></div></div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
+            </section>
+          )}
         </div>
 
-        <div className="bottom-rail">
-          <div><span className="rail-dot pass" />Internal, human-reviewed iteration</div>
-          <div><span className="rail-dot fail" />Direct customer exposure</div>
-          <button type="button" onClick={() => setDrawer("evidence")}>4 approved sources <span>→</span></button>
-          <small>Recorded on Gemini 3.5 Flash-Lite · 4-document evidence set · no live visitor calls</small>
-        </div>
+        <div className="workbench-footer"><span>Independent portfolio project by Yolee Escuadra.</span><span>Customer accounts, records, and scenarios are fictional. No employer, client, or production data.</span><span>No live visitor model calls.</span></div>
       </section>
-
-      <footer className="site-footer">Independent reference implementation by Yolee Escuadra. No employer, client, or production data.</footer>
 
       {drawer && (
         <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setDrawer(null); }}>
           <aside className={`evidence-drawer ${drawer === "cases" ? "wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-            <div className="drawer-header">
-              <div><span>Inspect the work</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div>
-              <button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button>
-            </div>
+            <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
 
-            {drawer === "cases" && (
-              <div className="drawer-body case-body">
-                <div className="case-summary">
-                  <div><b>10</b><span>passed</span></div><div className="summary-divider" /><div><b>5</b><span>review</span></div>
-                  <p>Click a row for Gemini&apos;s response and supporting sources.</p>
-                </div>
-                <div className="case-filters" aria-label="Filter cases">
-                  {(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? "All 15" : filter === "passed" ? "Passed 10" : "Review 5"}</button>)}
-                </div>
-                <div className="case-list">
-                  {filteredCases.map((testCase) => {
-                    const { result } = testCase;
-                    const open = expandedCase === testCase.id;
-                    return (
-                      <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
-                        <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}>
-                          <span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span>
-                          <span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span>
-                          <span className="route-pair"><small>Route</small><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span>
-                          <span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span>
-                          <span className="expand-mark">{open ? "−" : "+"}</span>
-                        </button>
-                        {open && <div className="case-detail">
-                          <div><small>Known context</small><p>{testCase.context}</p></div>
-                          <div><small>Gemini response</small><p>{result.output.response}</p></div>
-                          <div className="detail-meta"><span><small>Retrieved</small>{result.retrievedSourceIds.join(" · ")}</span><span><small>Cited</small>{result.output.citedSourceIds.length ? result.output.citedSourceIds.join(" · ") : "None"}</span></div>
-                        </div>}
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {drawer === "evidence" && <div className="drawer-body"><p className="drawer-intro">Four fictional, current documents form the complete V1 knowledge boundary.</p><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
-
-            {drawer === "method" && <div className="drawer-body method-body">
-              <div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret, draft, cite</strong></div></div>
-              <div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, authorize actions, release the pilot</strong></div></div>
-              <section><small>Design choice</small><h3>Separate probabilistic work from deterministic control.</h3><p>The model proposes. Approved evidence, account boundaries, and release thresholds remain externally enforced.</p></section>
-              <section><small>Recorded result</small><h3>10/15 passed. The gate stayed closed.</h3><p>That is the point of the workbench: evaluation changes the business decision instead of decorating it.</p></section>
+            {drawer === "cases" && <div className="drawer-body case-body">
+              <div className="case-context"><span>Original problem</span><b>Maya needs consistent, cited answers without account-changing actions.</b><small>Recorded with Gemini 3.5 Flash-Lite</small></div>
+              <div className="case-filters" aria-label="Filter cases">{(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? "All 15" : filter === "passed" ? "Passed 10" : "Review 5"}</button>)}</div>
+              <div className="case-list">{filteredCases.map((testCase) => { const { result } = testCase; const open = expandedCase === testCase.id; return <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
+                <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}><span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span><span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span><span className="route-pair"><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span><span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span><span className="expand-mark">{open ? "−" : "+"}</span></button>
+                {open && <div className="case-detail"><div><small>Known context</small><p>{testCase.context}</p></div><div><small>Gemini response</small><p>{result.output.response}</p></div><div className="detail-meta"><span><small>Retrieved</small>{result.retrievedSourceIds.join(" · ")}</span><span><small>Cited</small>{result.output.citedSourceIds.length ? result.output.citedSourceIds.join(" · ") : "None"}</span></div></div>}
+              </article>; })}</div>
             </div>}
+
+            {drawer === "evidence" && <div className="drawer-body"><div className="case-context"><span>Knowledge boundary</span><b>Four current, owned documents support every public claim.</b></div><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
+
+            {drawer === "method" && <div className="drawer-body method-body"><div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret, draft, cite</strong></div></div><div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, authorize actions, release the pilot</strong></div></div><section><small>Design choice</small><h3>Separate probabilistic work from deterministic control.</h3><p>The model proposes. Evidence, account boundaries, and release thresholds remain externally enforced.</p></section></div>}
           </aside>
         </div>
       )}
