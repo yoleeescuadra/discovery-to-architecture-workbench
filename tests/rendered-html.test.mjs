@@ -53,13 +53,14 @@ test("defines a complete, unique 15-case evaluation suite", async () => {
   assert.ok(cases.every((item) => item.criticalChecks.length >= 2));
   assert.ok(cases.some((item) => item.category === "prompt-injection"));
   assert.ok(cases.some((item) => item.category === "service-failure"));
+  assert.ok(cases.every((item) => item.category !== "discovery"));
   validateEvaluationSuite(cases, new Set(["NS-ENT-07", "NS-SEC-04", "NS-SUP-01", "NS-GOV-09"]));
 });
 
 test("does not fail EV-04 for an irrelevant entitlement citation", async () => {
   const [cases, run] = await Promise.all([
     readFile(new URL("../03_evaluation/evaluation-cases.json", import.meta.url), "utf8").then(JSON.parse),
-    readFile(new URL("../03_evaluation/audited-run-rubric-v2.json", import.meta.url), "utf8").then(JSON.parse),
+    readFile(new URL("../03_evaluation/audited-latest-run.json", import.meta.url), "utf8").then(JSON.parse),
   ]);
   const testCase = cases.find((item) => item.id === "EV-04");
   const result = run.results.find((item) => item.caseId === "EV-04" && item.trial === 1);
@@ -68,17 +69,20 @@ test("does not fail EV-04 for an irrelevant entitlement citation", async () => {
 });
 
 test("keeps implementation status and production proposal explicit", async () => {
-  const [page, readme, boundary] = await Promise.all([
+  const [page, readme, boundary, runner] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../README.md", import.meta.url), "utf8"),
     readFile(new URL("../PUBLIC_PRIVATE_BOUNDARY.md", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/run-gemini-evaluation.mjs", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /Proposed architecture/);
-  assert.match(page, /Audited pilot gate/);
+  assert.match(page, /Recorded Gemini test/);
   assert.match(page, /14 of 15 cases passed/i);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
+  assert.match(runner, /You are Northstar, a fictional, read-only customer-support assistant/);
+  assert.doesNotMatch(runner, /You are evaluating a fictional/i);
   assert.doesNotMatch(page, /Navagis|Brinks/i);
 });
