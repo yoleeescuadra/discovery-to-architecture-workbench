@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import evaluationCases from "@/03_evaluation/evaluation-cases.json";
-import recordedRun from "@/03_evaluation/recorded-run-2026-08-07T18-31-55-434Z.json";
+import recordedRun from "@/03_evaluation/audited-run-rubric-v2.json";
 
 type Stage = "brief" | "discovery" | "architecture" | "evaluation" | "decision";
 type Lens = "sources" | "identity" | "value";
@@ -15,10 +15,12 @@ type RecordedResult = {
   expectedRoute: string;
   retrievedSourceIds: string[];
   output: { route: string; response: string; citedSourceIds: string[]; uncertainty: string };
-  grade: { passed: boolean };
+  grade: { passed: boolean; failedChecks: string[] };
 };
 
 const primaryResults = (recordedRun.results as RecordedResult[]).filter((result) => result.trial === 1);
+const passedCount = primaryResults.filter((result) => result.grade.passed).length;
+const reviewCount = primaryResults.length - passedCount;
 const caseRows = evaluationCases.map((testCase) => ({
   ...testCase,
   result: primaryResults.find((result) => result.caseId === testCase.id)!,
@@ -52,6 +54,12 @@ const evidence = [
 const categoryMarks: Record<string, string> = {
   grounding: "G", identity: "ID", authorization: "A", "missing-evidence": "?",
   "document-governance": "V", security: "!", discovery: "D", "service-failure": "↻", "prompt-injection": "↯",
+};
+
+const reviewLabels: Record<string, string> = {
+  routeMatch: "Expected a discovery question",
+  "ownership-gap-found": "Document owner was not asked",
+  "freshness-gap-found": "Review cadence was not asked",
 };
 
 export default function Home() {
@@ -146,8 +154,8 @@ export default function Home() {
 
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
-              <div className="evaluation-copy"><span className="eyebrow">Recorded pilot gate</span><h1 id="evaluation-title">Safe behavior held.<br />Answer quality did not.</h1><p>The model passed every safety constraint, but missed required citations and two discovery routes.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · citations</small><i>→</i></button></div>
-              <div className="result-visual"><div className="score-ring" aria-label="10 of 15 cases passed"><span><b>10</b>/15<small>cases passed</small></span></div><div className="result-signals"><div className="signal pass"><span>✓</span><b>100%</b><small>Safety constraints</small></div><div className="signal review"><span>!</span><b>73%</b><small>Citation quality</small></div><div className="signal review"><span>?</span><b>2</b><small>Discovery misses</small></div></div></div>
+              <div className="evaluation-copy"><span className="eyebrow">Audited pilot gate · rubric v2</span><h1 id="evaluation-title">Safety held.<br />One discovery gap remained.</h1><p>Fourteen cases met every enforced criterion. One response gave a generic policy instead of asking who owns changing content.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
+              <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>cases passed</small></span></div><div className="result-signals"><div className="signal pass"><span>✓</span><b>100%</b><small>Safety constraints</small></div><div className="signal pass"><span>✓</span><b>100%</b><small>Citation quality</small></div><div className="signal review"><span>?</span><b>1</b><small>Discovery miss</small></div></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>Make the pilot call <span>→</span></button></div>
             </section>
           )}
@@ -155,7 +163,7 @@ export default function Home() {
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
               <div className="decision-symbol">↗<span>Internal only</span></div>
-              <div className="decision-copy"><span className="eyebrow">Pilot decision</span><h1 id="decision-title">Continue learning.<br />Keep customers out for now.</h1><p>Run a human-reviewed internal iteration. Fix citation enforcement and discovery routing before direct customer exposure.</p><div className="decision-gates"><div><span className="gate-dot pass" /><b>Safety</b><small>Ready</small></div><div><span className="gate-dot review" /><b>Citations</b><small>Fix</small></div><div><span className="gate-dot review" /><b>Discovery</b><small>Fix</small></div></div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="decision-copy"><span className="eyebrow">Pilot decision</span><h1 id="decision-title">Continue learning.<br />Keep customers out for now.</h1><p>Run a human-reviewed internal iteration. Strengthen discovery questioning before direct customer exposure.</p><div className="decision-gates"><div><span className="gate-dot pass" /><b>Safety</b><small>Ready</small></div><div><span className="gate-dot pass" /><b>Citations</b><small>Ready</small></div><div><span className="gate-dot review" /><b>Discovery</b><small>Fix</small></div></div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}
@@ -170,11 +178,11 @@ export default function Home() {
             <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
 
             {drawer === "cases" && <div className="drawer-body case-body">
-              <div className="case-context"><span>Original problem</span><b>Maya needs consistent, cited answers without account-changing actions.</b><small>Recorded with Gemini 3.5 Flash-Lite</small></div>
-              <div className="case-filters" aria-label="Filter cases">{(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? "All 15" : filter === "passed" ? "Passed 10" : "Review 5"}</button>)}</div>
+              <div className="case-context"><span>Original problem</span><b>Maya needs consistent, cited answers without account-changing actions.</b><small>Gemini 3.5 Flash-Lite · audited rubric v2</small></div>
+              <div className="case-filters" aria-label="Filter cases">{(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? `All ${primaryResults.length}` : filter === "passed" ? `Passed ${passedCount}` : `Review ${reviewCount}`}</button>)}</div>
               <div className="case-list">{filteredCases.map((testCase) => { const { result } = testCase; const open = expandedCase === testCase.id; return <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
                 <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}><span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span><span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span><span className="route-pair"><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span><span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span><span className="expand-mark">{open ? "−" : "+"}</span></button>
-                {open && <div className="case-detail"><div><small>Known context</small><p>{testCase.context}</p></div><div><small>Gemini response</small><p>{result.output.response}</p></div><div className="detail-meta"><span><small>Retrieved</small>{result.retrievedSourceIds.join(" · ")}</span><span><small>Cited</small>{result.output.citedSourceIds.length ? result.output.citedSourceIds.join(" · ") : "None"}</span></div></div>}
+                {open && <div className="case-detail"><div><small>Known context</small><p>{testCase.context}</p></div><div><small>Gemini response</small><p>{result.output.response}</p></div>{!result.grade.passed && <div className="review-reason"><small>Why this needs review</small><p>{result.grade.failedChecks.map((check) => reviewLabels[check] ?? check).join(" · ")}</p></div>}<div className="detail-meta"><span><small>Retrieved</small>{result.retrievedSourceIds.join(" · ")}</span><span><small>Cited</small>{result.output.citedSourceIds.length ? result.output.citedSourceIds.join(" · ") : "None"}</span></div></div>}
               </article>; })}</div>
             </div>}
 
