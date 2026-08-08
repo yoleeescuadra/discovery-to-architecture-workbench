@@ -76,7 +76,9 @@ test("keeps implementation status and production proposal explicit", async () =>
     readFile(new URL("../scripts/run-gemini-evaluation.mjs", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /Design result/);
+  assert.match(page, /Design consequence/);
+  assert.match(page, /Because you chose/);
+  assert.match(page, /What changed/);
   assert.match(page, /People decide whether the pilot advances\./);
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
@@ -89,6 +91,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Keep customer access blocked until verification is repeatable\./);
   assert.match(page, /Establish the baseline before starting a pilot\./);
   assert.match(page, /current human-only workflow first/i);
+  assert.match(page, /Recommendation · Based on your/);
+  assert.match(page, /Fixed checks compare it with the expected action, evidence and safety rules\./);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);

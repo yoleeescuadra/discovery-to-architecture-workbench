@@ -197,7 +197,7 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <div className="trace-chip"><span>Maya</span><b>Scattered support guidance</b>{activeLens && <><i>›</i><span>Your lens</span><b>{activeLens.label}</b></>}</div>
+          <div className="trace-chip"><span>Maya</span><b>Scattered support guidance</b>{activeLens && <><i>›</i><span>You chose</span><b>{activeLens.label}</b></>}</div>
         </nav>
 
         <div className="stage-frame">
@@ -206,7 +206,7 @@ export default function Home() {
               <div className="brief-copy">
                 <span className="eyebrow">Fictional client challenge · Meet Maya</span>
                 <h1 id="brief-title">Can AI turn scattered guidance into answers Maya can trust?</h1>
-                <p>Take the architect&apos;s seat: clarify the need, shape a grounded design, test Gemini, and make the pilot call.</p>
+                <p>Take the architect&apos;s seat: clarify the need, shape a grounded design, test Gemini, and decide whether the idea is ready for a pilot.</p>
                 <blockquote><small>Maya&apos;s constraint</small><span>Keep people in control, even when an AI answer sounds confident.</span></blockquote>
                 <button type="button" className="primary-action" onClick={() => move("discovery")}>Start the discovery <span>→</span></button>
               </div>
@@ -223,7 +223,7 @@ export default function Home() {
 
           {stage === "discovery" && (
             <section className="stage-screen focused-screen" aria-labelledby="discovery-title">
-              <div className="stage-heading"><span className="eyebrow">Discovery · one choice</span><h1 id="discovery-title">What would you investigate first?</h1><p>Your choice changes the design focus, test interpretation and pilot decision.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Discovery · choose one starting point</span><h1 id="discovery-title">What would you investigate first?</h1><p>Choose one question. The next screens show how it changes the design, test interpretation and final recommendation.</p></div>
               <div className="lens-choices">
                 {lenses.map((item) => (
                   <button key={item.id} type="button" className={lens === item.id ? "lens-card selected" : "lens-card"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id}>
@@ -231,34 +231,34 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("brief")}>← Problem</button><button type="button" className="primary-action" disabled={!lens} onClick={() => move("architecture")}>Apply this lens <span>→</span></button></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("brief")}>← Problem</button><button type="button" className="primary-action" disabled={!lens} onClick={() => move("architecture")}>Use this starting point <span>→</span></button></div>
             </section>
           )}
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Design result · {designLens.label} lens</span><h1 id="architecture-title">{designLens.label} lens selected: {designLens.headline}</h1><p>{designLens.consequence} The {designLens.focusNode} stage receives added emphasis.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>The complete system stays in place. {designLens.focusNode} receives extra attention because {designLens.consequence.toLowerCase()}</p></div>
               <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
                 {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${label === "Gemini" ? "model" : ""} ${label === "Guardrails" ? "control" : ""} ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
-              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>{designLens.label} lens → {designLens.focusNode} priority</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control}>{control}</i>)}</div></div></div>
+              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>What changed · {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control}>{control}</i>)}</div></div></div>
               <button type="button" className="quiet-link" onClick={() => setDrawer("method")}>Why this separation matters →</button>
-              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>Test the design <span>→</span></button></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>See the recorded test <span>→</span></button></div>
             </section>
           )}
 
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
-              <div className="evaluation-copy"><span className="eyebrow">Test result · {designLens.label} lens</span><h1 id="evaluation-title">{designLens.test.headline}</h1><p>{designLens.test.explanation}</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
+              <div className="evaluation-copy"><span className="eyebrow">Recorded test · Focus: {designLens.label}</span><h1 id="evaluation-title">{designLens.test.headline}</h1><p>{designLens.test.explanation}</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
               <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>{designLens.test.scoreLabel}</small></span></div><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
-              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>Make the pilot call <span>→</span></button></div>
+              <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>See the recommendation <span>→</span></button></div>
             </section>
           )}
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
               <div className="decision-symbol">↗<span>{designLens.decision.status}</span></div>
-              <div className="decision-copy"><span className="eyebrow">Pilot decision · {designLens.label} lens</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><div className="decision-gates">{designLens.decision.gates.map((gate) => <div key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small></div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="decision-copy"><span className="eyebrow">Recommendation · Based on your {designLens.label} choice</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><div className="decision-gates">{designLens.decision.gates.map((gate) => <div key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small></div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}
@@ -273,7 +273,7 @@ export default function Home() {
             <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "cases" ? "15 recorded test cases" : drawer === "evidence" ? "Approved evidence" : "Why this architecture"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
 
             {drawer === "cases" && <div className="drawer-body case-body">
-              <div className="case-context"><span>What is being tested</span><b>Gemini acts as Northstar; deterministic controls grade its response.</b><small>Gemini 3.5 Flash-Lite · runtime prompt · audited rubric v3.1</small></div>
+              <div className="case-context"><span>What is being tested</span><b>Gemini drafts the Northstar response. Fixed checks compare it with the expected action, evidence and safety rules.</b><small>Gemini 3.5 Flash-Lite · recorded prompt · audited rubric v3.1</small></div>
               <div className="case-filters" aria-label="Filter cases">{(["all", "passed", "review"] as CaseFilter[]).map((filter) => <button key={filter} type="button" className={caseFilter === filter ? "active" : ""} onClick={() => setCaseFilter(filter)}>{filter === "all" ? `All ${primaryResults.length}` : filter === "passed" ? `Passed ${passedCount}` : `Review ${reviewCount}`}</button>)}</div>
               <div className="case-list">{filteredCases.map((testCase) => { const { result } = testCase; const open = expandedCase === testCase.id; return <article className={result.grade.passed ? "case-row passed" : "case-row review"} key={testCase.id}>
                 <button type="button" className="case-row-main" onClick={() => setExpandedCase(open ? null : testCase.id)} aria-expanded={open}><span className="category-mark">{categoryMarks[testCase.category] ?? "·"}</span><span className="case-question"><small>{testCase.id} · {testCase.category.replaceAll("-", " ")}</small><strong>{testCase.request}</strong></span><span className="route-pair"><b>{testCase.expectedRoute}</b><i>→</i><b className={result.output.route === testCase.expectedRoute ? "match" : "mismatch"}>{result.output.route}</b></span><span className={`case-state ${result.grade.passed ? "pass" : "review"}`}>{result.grade.passed ? "Pass" : "Review"}</span><span className="expand-mark">{open ? "−" : "+"}</span></button>
