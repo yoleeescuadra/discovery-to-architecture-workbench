@@ -87,7 +87,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /The model test does not yet prove business value\./);
   assert.match(page, /Validate live retrieval before customer use\./);
   assert.match(page, /Keep customer access blocked until verification is repeatable\./);
-  assert.match(page, /Set a baseline before deciding whether to expand\./);
+  assert.match(page, /Establish the baseline before starting a pilot\./);
+  assert.match(page, /current human-only workflow first/i);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
