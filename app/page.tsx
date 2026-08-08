@@ -34,10 +34,102 @@ const stages: Array<{ id: Stage; label: string }> = [
   { id: "decision", label: "Decide" },
 ];
 
-const lenses: Array<{ id: Lens; icon: string; label: string; question: string; headline: string; consequence: string; focusNode: string; controls: string[] }> = [
-  { id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?", headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.", focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"] },
-  { id: "identity", icon: "◎", label: "Identity", question: "Who is asking?", headline: "Account facts require a trusted identity.", consequence: "General guidance stays separate from verified account facts.", focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"] },
-  { id: "value", icon: "↗", label: "Value", question: "What proves value?", headline: "People decide whether the pilot advances.", consequence: "Fixed thresholds, not model confidence, advance the pilot.", focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"] },
+type LensConfig = {
+  id: Lens;
+  icon: string;
+  label: string;
+  question: string;
+  headline: string;
+  consequence: string;
+  focusNode: string;
+  controls: string[];
+  test: {
+    headline: string;
+    explanation: string;
+    scoreLabel: string;
+    signals: Array<{ value: string; label: string; state: "pass" | "review" }>;
+  };
+  decision: {
+    status: string;
+    headline: string;
+    explanation: string;
+    gates: Array<{ label: string; value: string; state: "pass" | "review" }>;
+  };
+};
+
+const lenses: LensConfig[] = [
+  {
+    id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?",
+    headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.",
+    focusNode: "Retrieve", controls: ["Approved sources", "Version filters", "Required citations"],
+    test: {
+      headline: "Grounding and citation checks passed in all 15 cases.",
+      explanation: "The bounded test used four approved documents. Live indexing, version filters and retrieval outages still need validation.",
+      scoreLabel: "technical cases",
+      signals: [
+        { value: "100%", label: "Grounding coverage", state: "pass" },
+        { value: "100%", label: "Citation quality", state: "pass" },
+        { value: "Not tested", label: "Live retrieval", state: "review" },
+      ],
+    },
+    decision: {
+      status: "Internal pilot", headline: "Validate live retrieval before customer use.",
+      explanation: "Proceed with a human-reviewed internal pilot. Prove source ownership, version filtering and retrieval failure handling before customer exposure.",
+      gates: [
+        { label: "Source policy", value: "Ready", state: "pass" },
+        { label: "Citations", value: "Ready", state: "pass" },
+        { label: "Live retrieval", value: "Validate", state: "review" },
+      ],
+    },
+  },
+  {
+    id: "identity", icon: "◎", label: "Identity", question: "Who is asking?",
+    headline: "Account facts require a trusted identity.", consequence: "General guidance stays separate from verified account facts.",
+    focusNode: "Guardrails", controls: ["Trusted session", "Account match", "Read-only actions"],
+    test: {
+      headline: "14 of 15 test cases passed. One identity-routing case needs review.",
+      explanation: "Gemini protected the account data, but answered instead of asking the customer to verify identity.",
+      scoreLabel: "technical cases",
+      signals: [
+        { value: "100%", label: "Account protection", state: "pass" },
+        { value: "100%", label: "Citation quality", state: "pass" },
+        { value: "67%", label: "Route stability", state: "review" },
+      ],
+    },
+    decision: {
+      status: "Internal only", headline: "Keep customer access blocked until verification is repeatable.",
+      explanation: "Run a human-reviewed internal iteration. Make identity verification routing repeatable before direct customer exposure.",
+      gates: [
+        { label: "Account safety", value: "Ready", state: "pass" },
+        { label: "Citations", value: "Ready", state: "pass" },
+        { label: "Identity routing", value: "Fix", state: "review" },
+      ],
+    },
+  },
+  {
+    id: "value", icon: "↗", label: "Value", question: "What proves value?",
+    headline: "People decide whether the pilot advances.", consequence: "Fixed thresholds, not model confidence, advance the pilot.",
+    focusNode: "Human", controls: ["Baseline first", "Success thresholds", "Pilot gate"],
+    test: {
+      headline: "The model test does not yet prove business value.",
+      explanation: "Safety and grounding were measured, but there is no baseline for resolution time, answer quality or support effort.",
+      scoreLabel: "technical cases",
+      signals: [
+        { value: "14/15", label: "Technical cases", state: "pass" },
+        { value: "Not set", label: "Business baseline", state: "review" },
+        { value: "Not set", label: "Success threshold", state: "review" },
+      ],
+    },
+    decision: {
+      status: "Measure first", headline: "Set a baseline before deciding whether to expand.",
+      explanation: "Run an internal measurement pilot. Compare answer time, quality and support effort with the current human-only workflow.",
+      gates: [
+        { label: "Technical safety", value: "Ready", state: "pass" },
+        { label: "Baseline", value: "Set first", state: "review" },
+        { label: "Success threshold", value: "Define", state: "review" },
+      ],
+    },
+  },
 ];
 
 const architecture = [
@@ -83,7 +175,7 @@ export default function Home() {
   );
 
   const move = (next: Stage) => {
-    if (next === "architecture" && !lens) setLens("identity");
+    if (["architecture", "evaluation", "decision"].includes(next) && !lens) setLens("identity");
     setStage(next);
   };
 
@@ -131,7 +223,7 @@ export default function Home() {
 
           {stage === "discovery" && (
             <section className="stage-screen focused-screen" aria-labelledby="discovery-title">
-              <div className="stage-heading"><span className="eyebrow">Discovery · one choice</span><h1 id="discovery-title">What would you investigate first?</h1><p>Your starting point changes what the architecture emphasizes.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Discovery · one choice</span><h1 id="discovery-title">What would you investigate first?</h1><p>Your choice changes the design focus, test interpretation and pilot decision.</p></div>
               <div className="lens-choices">
                 {lenses.map((item) => (
                   <button key={item.id} type="button" className={lens === item.id ? "lens-card selected" : "lens-card"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id}>
@@ -157,16 +249,16 @@ export default function Home() {
 
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
-              <div className="evaluation-copy"><span className="eyebrow">Test result · recorded Gemini evaluation</span><h1 id="evaluation-title">14 of 15 test cases passed. One identity-routing case needs review.</h1><p>Gemini protected the account data, but answered instead of asking the customer to verify identity.</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
-              <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>cases passed</small></span></div><div className="result-signals"><div className="signal pass"><span>✓</span><b>100%</b><small>Safety constraints</small></div><div className="signal pass"><span>✓</span><b>100%</b><small>Citation quality</small></div><div className="signal review"><span>↻</span><b>67%</b><small>Route stability</small></div></div></div>
+              <div className="evaluation-copy"><span className="eyebrow">Test result · {designLens.label} lens</span><h1 id="evaluation-title">{designLens.test.headline}</h1><p>{designLens.test.explanation}</p><button type="button" className="case-link" onClick={() => setDrawer("cases")}><span>▦</span><b>Inspect all 15 cases</b><small>Expected vs actual · response · review reason</small><i>→</i></button></div>
+              <div className="result-visual"><div className="score-ring" aria-label="14 of 15 cases passed"><span><b>14</b>/15<small>{designLens.test.scoreLabel}</small></span></div><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>Make the pilot call <span>→</span></button></div>
             </section>
           )}
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
-              <div className="decision-symbol">↗<span>Internal only</span></div>
-              <div className="decision-copy"><span className="eyebrow">Pilot decision</span><h1 id="decision-title">Continue learning.<br />Keep customers out for now.</h1><p>Run a human-reviewed internal iteration. Make identity verification routing repeatable before direct customer exposure.</p><div className="decision-gates"><div><span className="gate-dot pass" /><b>Safety</b><small>Ready</small></div><div><span className="gate-dot pass" /><b>Citations</b><small>Ready</small></div><div><span className="gate-dot review" /><b>Stability</b><small>Fix</small></div></div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="decision-symbol">↗<span>{designLens.decision.status}</span></div>
+              <div className="decision-copy"><span className="eyebrow">Pilot decision · {designLens.label} lens</span><h1 id="decision-title">{designLens.decision.headline}</h1><p>{designLens.decision.explanation}</p><div className="decision-gates">{designLens.decision.gates.map((gate) => <div key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small></div>)}</div><div className="decision-links"><button type="button" onClick={() => setDrawer("cases")}>View test cases</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}

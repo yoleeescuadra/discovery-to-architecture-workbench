@@ -153,7 +153,7 @@ button { cursor: pointer; }
 .decision-screen { display: grid; grid-template-columns: .8fr 1.2fr; gap: 68px; align-items: center; width: min(940px, calc(100% - 72px)); padding-bottom: 46px; }
 .decision-symbol { display: grid; place-items: center; width: 260px; height: 260px; color: #fff; background: linear-gradient(145deg, var(--pine), var(--pine-dark)); border-radius: 50%; box-shadow: 0 24px 55px rgba(16,47,70,.2); font-size: 72px; }
 .decision-symbol span { margin-top: -50px; padding: 7px 11px; color: var(--pine-dark); background: var(--mint-strong); border-radius: 99px; font-size: 10px; font-weight: 750; line-height: 1.3; letter-spacing: .08em; text-transform: uppercase; }
-.decision-copy h1 { font-size: clamp(38px, 4vw, 56px); }
+.decision-copy h1 { max-width: 610px; font-size: clamp(36px, 3.6vw, 50px); line-height: 1.04; }
 .decision-gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 24px; }
 .decision-gates > div { display: grid; grid-template-columns: 9px 1fr; gap: 2px 7px; padding: 10px; background: var(--paper-2); border-radius: 8px; }
 .gate-dot { grid-row: 1 / 3; width: 8px; height: 8px; margin-top: 2px; border-radius: 50%; }
