@@ -79,10 +79,10 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Design consequence/);
   assert.match(page, /Because you chose/);
   assert.match(page, /What changed/);
-  assert.match(page, /Light teal: Gemini model work/);
-  assert.match(page, /Dark teal: fixed guardrails/);
+  assert.doesNotMatch(page, /What do the colors mean|Light teal: Gemini model work|Dark teal: fixed guardrails/);
+  assert.doesNotMatch(page, /role="tooltip"|tip-panel|metric-help-label/);
   assert.match(page, /The system selects relevant passages from the approved document set\./);
-  assert.match(page, /Retrieved.*sources supplied to Gemini/s);
+  assert.match(page, /Retrieved<\/strong> means supplied to Gemini/);
   assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
   assert.match(page, /People decide whether the pilot advances\./);
   assert.match(page, /Approved sources/);
@@ -103,6 +103,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Recorded test/);
   assert.match(page, /Four of six routes matched/);
   assert.match(page, /rounded to 67%/);
+  assert.match(page, /How were these results measured\?/);
+  assert.match(page, /Help with routes and terms/);
   assert.match(page, /For Maya.*fictional software product, Northstar/s);
   assert.match(page, /Fixed checks compare its route, evidence use and safety controls with the expected result\./);
   assert.match(page, /SSO<\/strong>: single sign-on/);
