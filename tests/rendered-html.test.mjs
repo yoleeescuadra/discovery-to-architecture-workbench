@@ -81,8 +81,12 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
   assert.match(page, /Success thresholds/);
-  assert.match(page, /recorded Gemini evaluation/);
+  assert.match(page, /Grounding and citation checks passed in all 15 cases\./);
   assert.match(page, /14 of 15 cases passed/i);
+  assert.match(page, /The model test does not yet prove business value\./);
+  assert.match(page, /Validate live retrieval before customer use\./);
+  assert.match(page, /Keep customer access blocked until verification is repeatable\./);
+  assert.match(page, /Set a baseline before deciding whether to expand\./);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
