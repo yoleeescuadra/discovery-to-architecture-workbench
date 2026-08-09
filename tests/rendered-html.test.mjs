@@ -38,7 +38,7 @@ test("server-renders the Workbench experience and finished metadata", async () =
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|Your site is taking shape/i);
 });
 
-test("defines a complete, unique 15-case evaluation suite", async () => {
+test("defines a complete, unique 15-scenario evaluation suite", async () => {
   const cases = JSON.parse(
     await readFile(
       new URL("../03_evaluation/evaluation-cases.json", import.meta.url),
@@ -81,41 +81,46 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /What changed/);
   assert.doesNotMatch(page, /What do the colors mean|Light teal: Gemini model work|Dark teal: fixed guardrails/);
   assert.doesNotMatch(page, /role="tooltip"|tip-panel|metric-help-label/);
-  assert.match(page, /The system selects relevant passages from the approved document set\./);
-  assert.match(page, /Retrieved<\/strong> means supplied to Gemini/);
+  assert.match(page, /Keyword overlap and topic rules rank four approved documents/);
+  assert.match(page, /Question \+ context/);
+  assert.match(page, /Production options could add semantic or vector search, metadata filtering and reranking/);
   assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
   assert.match(page, /People decide whether the pilot advances\./);
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
   assert.match(page, /Success thresholds/);
-  assert.match(page, /All 15 cases passed the evidence checks\./);
-  assert.match(page, /one separate identity-routing case still needs review/i);
-  assert.match(page, /Your chosen focus/);
-  assert.match(page, /Overall suite: 14 of 15 cases passed/);
-  assert.match(page, /14 of 15 cases passed/i);
-  assert.match(page, /The model test does not yet prove business value\./);
-  assert.match(page, /Validate live retrieval before starting a pilot\./);
-  assert.match(page, /Make identity routing reliable before starting a pilot\./);
-  assert.match(page, /Define the business baseline before starting a pilot\./);
+  assert.match(page, /14 of 15 scenarios passed\./);
+  assert.match(page, /All 15 passed the evidence checks\./);
+  assert.match(page, /Your focus/);
+  assert.match(page, /The technical evaluation is complete\. The pilot measurement plan is not\./);
+  assert.match(page, /Human-only baseline/);
+  assert.match(page, /Success thresholds/);
+  assert.match(page, /Pilot measurement plan/);
+  assert.match(page, /Validate live document search in a controlled environment\./);
+  assert.match(page, /Correct the verification decision and rerun the recorded scenarios\./);
+  assert.match(page, /Measure the current workflow, set thresholds and finalize the pilot measurement plan\./);
   assert.match(page, /Pilot gate closed/);
   assert.equal(page.match(/status: "Pilot gate closed"/g)?.length, 3);
-  assert.match(page, /Overall recommendation · \{designLens\.label\} focus/);
+  assert.match(page, /Customer-facing pilot/);
+  assert.match(page, /Not ready yet\./);
   assert.match(page, /all three checks determine overall readiness/);
-  assert.match(page, /The pilot gate uses all three checks below\./);
-  assert.match(page, /Live retrieval/);
-  assert.match(page, /Identity routing/);
-  assert.match(page, /Baseline \+ thresholds/);
+  assert.match(page, /One shared gate applies to every focus\./);
+  assert.match(page, /Live document search/);
+  assert.match(page, /Verification decision/);
+  assert.match(page, /Current maturity/);
   assert.doesNotMatch(page, /status: "Internal pilot"|status: "Internal only"/);
   assert.match(page, /Your journey/);
   assert.match(page, /Recorded test/);
-  assert.match(page, /Four of six routes matched/);
-  assert.match(page, /rounded to 67%/);
-  assert.match(page, /How were these results measured\?/);
-  assert.match(page, /Help with routes and terms/);
+  assert.match(page, /Evaluation evidence/);
+  assert.match(page, /Why these 15 scenarios\?/);
+  assert.match(page, /What was evaluated/);
+  assert.match(page, /What was not evaluated/);
+  assert.match(page, /Requirement and risk coverage/);
+  assert.match(page, /View the exact recorded prompt and model output/);
   assert.match(page, /For Maya.*fictional software product, Northstar/s);
-  assert.match(page, /Fixed checks compare its route, evidence use and safety controls with the expected result\./);
-  assert.match(page, /SSO<\/strong>: single sign-on/);
-  assert.match(page, /MFA<\/strong>: multi-factor authentication/);
+  assert.match(page, /Claims supported by supplied documents/);
+  assert.match(page, /Sources correctly support the claims/);
+  assert.match(page, /Verification decision was inconsistent/);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
   assert.match(boundary, /No visitor-triggered model calls/i);
