@@ -22,17 +22,17 @@ Visitors:
 1. Meet Maya and read her short business brief.
 2. Choose the discovery lens they would investigate first.
 3. See how that lens changes the architecture emphasis.
-4. Inspect the recorded Gemini test through that lens.
+4. See the same 14 of 15 overall evaluation result, then inspect the focused finding through that lens.
 5. See the same overall pilot gate with a lens-specific next action.
-6. Inspect the recorded cases, source boundary, workflow, and metric definitions.
+6. Inspect one consolidated evaluation drawer with rationale, coverage, scope, technical terms, recorded prompts, model outputs, and expected-versus-actual results.
 
 ## V1 scope
 
 - One fictional customer scenario
 - Four synthetic approved source documents
-- Fifteen evaluation cases
+- Fifteen designed evaluation scenarios
 - One bounded architecture recommendation
-- Four inspectable explanation drawers
+- One consolidated evaluation drawer plus focused source and workflow drawers
 - One rule-based pilot decision
 - Static public experience with no visitor-triggered model calls
 
@@ -42,7 +42,7 @@ Visitors:
 
 - Interactive discovery-to-decision experience
 - Synthetic source corpus
-- Evaluation case definitions and deterministic release gates
+- Designed evaluation scenarios and deterministic release gates
 - Recorded-run interface and provenance model
 - Responsive static delivery
 
@@ -54,7 +54,7 @@ Visitors:
 - Deterministic authorization and citation controls
 - Request logging, evaluation, and monitoring
 
-The public interface must not imply that proposed production components are already deployed.
+The implemented retrieval method is intentionally simple: question and context are scored against four approved documents using keyword overlap and topic-specific rules, then the top three are supplied to Gemini. Semantic or vector search, metadata filtering and reranking are production options, not capabilities exercised by the recorded evaluation. The public interface must not imply that proposed production components are already deployed.
 
 ## Authorship statement
 
