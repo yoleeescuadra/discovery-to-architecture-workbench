@@ -17,7 +17,7 @@ Maya leads a support team with scattered guidance and repetitive questions. Shou
 - Human-centered discovery
 - Inspectable keyword and topic-rule retrieval design
 - Recorded Gemini response evaluation
-- Deterministic routing, authorization, and citation checks
+- Deterministic checks of routing, authorization, and citations
 - Cross-lens readiness gates
 - Transparent implemented-versus-proposed boundaries
 - Executive readiness communication
