@@ -77,7 +77,7 @@ test("keeps implementation status and production proposal explicit", async () =>
   ]);
 
   assert.match(page, /Design consequence/);
-  assert.match(page, /Because you chose/);
+  assert.match(page, /Your discovery choice → design consequence/);
   assert.doesNotMatch(page, /What do the colors mean|Light teal: Gemini model work|Dark teal: fixed guardrails/);
   assert.doesNotMatch(page, /role="tooltip"|tip-panel|metric-help-label/);
   assert.doesNotMatch(page, /className="control-chips"/);
@@ -86,11 +86,13 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /keywords \+ topic rules/);
   assert.match(page, /A production implementation could add semantic or vector search, metadata filtering and reranking/);
   assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
-  assert.match(page, /People decide whether the pilot advances\./);
+  assert.match(page, /A technically good answer does not prove the workflow is worth adopting\./);
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
   assert.match(page, /Success thresholds/);
   assert.match(page, /14 of 15 scenarios passed\./);
+  assert.match(page, /One scenario protected the account correctly but did not explicitly ask the customer to verify identity/);
+  assert.match(page, /Only these four approved documents may support the assistant/);
   assert.match(page, /All 15 passed the evidence checks\./);
   assert.match(page, /Your focus/);
   assert.match(page, /The technical evaluation is complete\. The pilot measurement plan is not\./);
@@ -104,7 +106,7 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.equal(page.match(/status: "Pilot gate closed"/g)?.length, 3);
   assert.match(page, /Customer-facing pilot/);
   assert.match(page, /Not ready yet\./);
-  assert.match(page, /all three checks determine overall readiness/);
+  assert.match(page, /We will keep the other concerns in the final decision/);
   assert.match(page, /One shared gate\. Your focus only highlights the next action\./);
   assert.match(page, /Live document search/);
   assert.match(page, /Verification decision/);
