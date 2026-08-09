@@ -68,7 +68,7 @@ type LensConfig = {
 const lenses: LensConfig[] = [
   {
     id: "sources", icon: "≡", label: "Evidence", question: "What can we trust?",
-    headline: "Retrieval starts with approved sources.", consequence: "Only current, owned guidance enters retrieval.",
+    headline: "Answers are only as trustworthy as their sources.", consequence: "Only current, owned guidance enters retrieval.",
     focusNode: "Retrieve", controls: [
       { label: "Approved sources", help: "Only current documents with a named owner may support an answer." },
       { label: "Version filters", help: "Superseded documents are excluded from active retrieval." },
@@ -112,7 +112,7 @@ const lenses: LensConfig[] = [
   },
   {
     id: "value", icon: "↗", label: "Value", question: "What proves value?",
-    headline: "People decide whether the pilot advances.", consequence: "Fixed thresholds, not model confidence, advance the pilot.",
+    headline: "A technically good answer does not prove the workflow is worth adopting.", consequence: "Fixed thresholds, not model confidence, advance the pilot.",
     focusNode: "Human", controls: [
       { label: "Baseline first", help: "Measure the current human-only workflow before comparing it with AI assistance." },
       { label: "Success thresholds", help: "Set fixed targets for answer quality, time and support effort before the pilot." },
@@ -243,7 +243,7 @@ export default function Home() {
               <div className="brief-copy">
                 <span className="eyebrow">Fictional client challenge · Meet Maya</span>
                 <h1 id="brief-title">Can AI turn scattered guidance into answers Maya can trust?</h1>
-                <p>Take the architect&apos;s seat: clarify the need, shape a grounded design, test Gemini, and decide whether the idea is ready for a pilot.</p>
+                <p>Maya&apos;s support team answers the same customer questions from product docs, policies, support notes and plan guides. The guidance does not always agree.</p>
                 <blockquote><small>Maya&apos;s constraint</small><span>Keep people in control, even when an AI answer sounds confident.</span></blockquote>
                 <button type="button" className="primary-action" onClick={() => move("discovery")}>Start the discovery <span>→</span></button>
               </div>
@@ -260,7 +260,7 @@ export default function Home() {
 
           {stage === "discovery" && (
             <section className="stage-screen focused-screen" aria-labelledby="discovery-title">
-              <div className="stage-heading"><span className="eyebrow">Discovery · choose one starting point</span><h1 id="discovery-title">What would you investigate first?</h1><p>Choose one question. Your lens changes the design emphasis and immediate next step, but all three checks determine overall readiness.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Discovery · choose one starting point</span><h1 id="discovery-title">What would you investigate first?</h1><p>There is more than one risk. Choose where you would start. We will keep the other concerns in the final decision.</p></div>
               <div className="lens-choices">
                 {lenses.map((item) => (
                   <button key={item.id} type="button" className={lens === item.id ? "lens-card selected" : "lens-card"} onClick={() => setLens(item.id)} aria-pressed={lens === item.id}>
@@ -274,12 +274,12 @@ export default function Home() {
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>Your choice changes the design emphasis, not the complete workflow.</p></div>
+              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">{designLens.headline}</h1><p>So {designLens.focusNode} receives extra attention. The complete workflow stays in place.</p></div>
               <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
                 {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
               <div className="retrieval-strip" aria-label="Retrieval method used in this prototype"><b>Prototype retrieval:</b><span>keywords + topic rules</span><i>→</i><span>rank 4 approved documents</span><i>→</i><span>top 3 to Gemini</span></div>
-              <div className="architecture-insight"><small>{designLens.label} focus → {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong></div>
+              <div className="architecture-insight"><small>Your discovery choice → design consequence</small><strong>Because you started with {designLens.label.toLowerCase()}, {designLens.focusNode} is prioritized: {designLens.consequence}</strong></div>
               <button type="button" className="quiet-link" aria-haspopup="dialog" aria-expanded={drawer === "method"} onClick={() => setDrawer("method")}>How this flow works →</button>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>See the recorded test <span>→</span></button></div>
             </section>
@@ -287,7 +287,7 @@ export default function Home() {
 
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
-              <div className="evaluation-copy"><span className="eyebrow">Recorded offline evaluation · 15 designed scenarios</span><h1 id="evaluation-title">14 of 15 scenarios passed.</h1><p>One verification scenario needs correction. This overall result stays the same whichever focus you selected.</p><button type="button" className="case-link" onClick={() => setDrawer("evaluation")}><span>▦</span><b>Review the evaluation</b><small>Why these scenarios · scope · expected vs actual</small><i>→</i></button></div>
+              <div className="evaluation-copy"><span className="eyebrow">Recorded offline evaluation · 15 designed scenarios</span><h1 id="evaluation-title">14 of 15 scenarios passed.</h1><p className="evaluation-exception"><strong>What failed?</strong> One scenario protected the account correctly but did not explicitly ask the customer to verify identity. The overall result stays the same whichever focus you selected.</p><button type="button" className="case-link" onClick={() => setDrawer("evaluation")}><span>▦</span><b>Review the evaluation</b><small>Why these scenarios · scope · expected vs actual</small><i>→</i></button></div>
               <div className="result-visual"><div className="focus-result-card"><small>Your focus · {designLens.label}</small><strong>{designLens.test.focusHeadline}</strong><div className="focus-stat"><b>{designLens.test.focusValue}</b><span>{designLens.test.focusLabel}</span></div></div><p className="focus-explanation">{designLens.test.focusExplanation}</p><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>See the recommendation <span>→</span></button></div>
             </section>
@@ -295,7 +295,7 @@ export default function Home() {
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
-              <div className="decision-copy"><span className="eyebrow">Customer-facing pilot</span><h1 id="decision-title">Not ready yet.</h1><p>Three prerequisites still separate the recorded prototype from a controlled pilot.</p><p className="decision-scope">One shared gate. Your focus only highlights the next action.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="selected-next-action"><small>Your {designLens.label} next action</small><strong>{designLens.decision.nextAction}</strong></div><div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>After prerequisites: controlled pilot</span></div><div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button><button type="button" onClick={() => setDrawer("journey")}>View journey</button></div></div>
+              <div className="decision-copy"><span className="eyebrow">Customer-facing pilot</span><h1 id="decision-title">Not ready yet.</h1><p>Three prerequisites still separate the recorded prototype from a controlled pilot.</p><p className="decision-scope">One shared gate. Your focus only highlights the next action.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="selected-next-action"><small>Your {designLens.label} next action</small><strong>{designLens.decision.nextAction}</strong></div><div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>After prerequisites: controlled pilot</span></div><p className="decision-reconnect">The idea is promising, but Maya should not put it in front of customers until all three prerequisites are resolved.</p><div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button><button type="button" onClick={() => setDrawer("journey")}>View journey</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}
@@ -334,7 +334,7 @@ export default function Home() {
               </article>; })}</div>
             </div>}
 
-            {drawer === "evidence" && <div className="drawer-body"><div className="case-context"><span>Knowledge boundary</span><b>Four current, owned documents support every public claim.</b></div><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
+            {drawer === "evidence" && <div className="drawer-body"><div className="case-context"><span>Knowledge boundary</span><b>Only these four approved documents may support the assistant&apos;s answers.</b></div><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
 
             {drawer === "journey" && <div className="drawer-body"><div className="journey-trace"><small>From Maya&apos;s problem to the pilot gate</small><ol><li><span>1</span><div><small>Problem</small><b>Scattered support guidance</b></div></li><li><span>2</span><div><small>You chose</small><b>{designLens.label}</b></div></li><li><span>3</span><div><small>Design focus</small><b>{designLens.focusNode}</b></div></li><li><span>4</span><div><small>Recorded test</small><b>{designLens.test.traceResult}</b></div></li><li><span>5</span><div><small>Recommendation</small><b>{designLens.decision.status}</b></div></li></ol></div></div>}
 
