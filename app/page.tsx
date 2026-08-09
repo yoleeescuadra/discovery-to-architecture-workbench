@@ -6,7 +6,7 @@ import recordedRun from "@/03_evaluation/audited-latest-run.json";
 
 type Stage = "brief" | "discovery" | "architecture" | "evaluation" | "decision";
 type Lens = "sources" | "identity" | "value";
-type Drawer = "evaluation" | "evidence" | "method" | null;
+type Drawer = "evaluation" | "evidence" | "method" | "journey" | null;
 type CaseFilter = "all" | "passed" | "review";
 
 type RecordedResult = {
@@ -79,9 +79,9 @@ const lenses: LensConfig[] = [
       focusExplanation: "Every claim was supported by the supplied documents, and every cited source supported the claim linked to it.",
       focusValue: "15/15", focusLabel: "Evidence checks passed", traceResult: "Evidence checks passed in all 15",
       signals: [
-        { value: "100%", label: "Claims supported by supplied documents", technical: "Grounding", state: "pass", help: "Every consequential claim in the recorded responses could be traced to a passage supplied to Gemini." },
-        { value: "100%", label: "Sources correctly support the claims", technical: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
-        { value: "Not tested", label: "Live document search", technical: "Retrieval", state: "review", help: "The evaluation used a fixed set of four documents. It did not test a changing document index, live search service or retrieval outage." },
+        { value: "100%", label: "Claims were supported by supplied documents", technical: "Grounding", state: "pass", help: "Every consequential claim in the recorded responses could be traced to a passage supplied to Gemini." },
+        { value: "100%", label: "Sources supported the claims", technical: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
+        { value: "Not tested", label: "Live document search was not tested", technical: "Retrieval", state: "review", help: "The evaluation used a fixed set of four documents. It did not test a changing document index, live search service or retrieval outage." },
       ],
     },
     decision: {
@@ -98,11 +98,11 @@ const lenses: LensConfig[] = [
     ],
     test: {
       focusHeadline: "One verification decision needs correction.",
-      focusExplanation: "Gemini protected the account data, but answered instead of first asking the customer to verify identity.",
+      focusExplanation: "One scenario protected the account information correctly but chose Answer instead of explicitly asking for verification.",
       focusValue: "1", focusLabel: "Verification scenario needs correction", traceResult: "One verification decision needs correction",
       signals: [
         { value: "100%", label: "Account details remained protected", technical: "Safety constraint", state: "pass", help: "No recorded response disclosed account-specific facts without trusted matching identity context." },
-        { value: "100%", label: "Sources correctly support the claims", technical: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
+        { value: "100%", label: "Sources supported the claims", technical: "Citation quality", state: "pass", help: "Every cited source was approved and supported the claim linked to it." },
         { value: "Needs work", label: "Verification decision was inconsistent", technical: "Routing", state: "review", help: "The repeated trials did not always choose the same action. This finding concerns the answer, ask, block or escalate decision, not whether account data was exposed." },
       ],
     },
@@ -123,9 +123,9 @@ const lenses: LensConfig[] = [
       focusExplanation: "Measure the human-only workflow, set success thresholds and define how the pilot will compare answer time, quality and support effort.",
       focusValue: "3", focusLabel: "Measurement prerequisites remain", traceResult: "Pilot measurement plan remains incomplete",
       signals: [
-        { value: "Not measured", label: "Human-only baseline", technical: "Baseline", state: "review", help: "No current measure exists for human-only answer time, quality or support effort." },
-        { value: "Not set", label: "Success thresholds", technical: "Decision criteria", state: "review", help: "The minimum improvements required to justify expansion have not yet been defined." },
-        { value: "Not defined", label: "Pilot measurement plan", technical: "Experiment design", state: "review", help: "The comparison method, sample and review cadence still need to be documented before the controlled pilot." },
+        { value: "Not measured", label: "Human-only baseline was not measured", technical: "Baseline", state: "review", help: "No current measure exists for human-only answer time, quality or support effort." },
+        { value: "Not set", label: "Success thresholds were not set", technical: "Decision criteria", state: "review", help: "The minimum improvements required to justify expansion have not yet been defined." },
+        { value: "Not defined", label: "Pilot measurement plan was not defined", technical: "Experiment design", state: "review", help: "The comparison method, sample and review cadence still need to be documented before the controlled pilot." },
       ],
     },
     decision: {
@@ -274,12 +274,12 @@ export default function Home() {
 
           {stage === "architecture" && (
             <section className="stage-screen focused-screen architecture-screen" aria-labelledby="architecture-title">
-              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>The complete system stays in place. {designLens.focusNode} receives extra attention because {designLens.consequence.toLowerCase()}</p></div>
+              <div className="stage-heading"><span className="eyebrow">Design consequence · You chose {designLens.label}</span><h1 id="architecture-title">Because you chose {designLens.label}: {designLens.headline}</h1><p>Your choice changes the design emphasis, not the complete workflow.</p></div>
               <div className="architecture-flow" aria-label={`Brief flows through retrieval, Gemini, guardrails, and human review; ${designLens.focusNode} is emphasized`}>
                 {architecture.map(([icon, label], index) => { const priority = label === designLens.focusNode; return <div className="flow-wrap" key={label}><div className={`flow-node ${priority ? "priority" : ""}`}><span>{icon}</span><b>{label}</b>{priority && <em>Priority</em>}</div>{index < architecture.length - 1 && <i>→</i>}</div>; })}
               </div>
-              <div className="retrieval-strip" aria-label="Retrieval method used in this prototype"><small>What this prototype actually retrieves</small><div><b>Question + context</b><i>→</i><b>Keyword overlap + topic rules</b><i>→</i><b>Rank 4 approved documents</b><i>→</i><b>Top 3 to Gemini</b></div><p>Production options could add semantic or vector search, metadata filtering and reranking.</p></div>
-              <div className="architecture-insight"><span>{designLens.icon}</span><div><small>What changed · {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong><div className="control-chips">{designLens.controls.map((control) => <i key={control.label}>{control.label}</i>)}</div></div></div>
+              <div className="retrieval-strip" aria-label="Retrieval method used in this prototype"><b>Prototype retrieval:</b><span>keywords + topic rules</span><i>→</i><span>rank 4 approved documents</span><i>→</i><span>top 3 to Gemini</span></div>
+              <div className="architecture-insight"><small>{designLens.label} focus → {designLens.focusNode} gets extra attention</small><strong>{designLens.consequence}</strong></div>
               <button type="button" className="quiet-link" aria-haspopup="dialog" aria-expanded={drawer === "method"} onClick={() => setDrawer("method")}>How this flow works →</button>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("discovery")}>← Discovery</button><button type="button" className="primary-action" onClick={() => move("evaluation")}>See the recorded test <span>→</span></button></div>
             </section>
@@ -288,15 +288,14 @@ export default function Home() {
           {stage === "evaluation" && (
             <section className="stage-screen evaluation-screen" aria-labelledby="evaluation-title">
               <div className="evaluation-copy"><span className="eyebrow">Recorded offline evaluation · 15 designed scenarios</span><h1 id="evaluation-title">14 of 15 scenarios passed.</h1><p>One verification scenario needs correction. This overall result stays the same whichever focus you selected.</p><button type="button" className="case-link" onClick={() => setDrawer("evaluation")}><span>▦</span><b>Review the evaluation</b><small>Why these scenarios · scope · expected vs actual</small><i>→</i></button></div>
-              <div className="result-visual"><div className="focus-result-card"><small>Your focus · {designLens.label}</small><b>{designLens.test.focusValue}</b><strong>{designLens.test.focusLabel}</strong><p>{designLens.test.focusHeadline}</p></div><p className="focus-explanation">{designLens.test.focusExplanation}</p><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
+              <div className="result-visual"><div className="focus-result-card"><small>Your focus · {designLens.label}</small><strong>{designLens.test.focusHeadline}</strong><div className="focus-stat"><b>{designLens.test.focusValue}</b><span>{designLens.test.focusLabel}</span></div></div><p className="focus-explanation">{designLens.test.focusExplanation}</p><div className="result-signals">{designLens.test.signals.map((signal) => <div className={`signal ${signal.state}`} key={signal.label}><span>{signal.state === "pass" ? "✓" : "!"}</span><b>{signal.value}</b><small>{signal.label}</small></div>)}</div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("architecture")}>← Design</button><button type="button" className="primary-action" onClick={() => move("decision")}>See the recommendation <span>→</span></button></div>
             </section>
           )}
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
-              <div className="journey-trace"><small>Your journey</small><ol><li><span>1</span><div><small>Problem</small><b>Scattered support guidance</b></div></li><li><span>2</span><div><small>You chose</small><b>{designLens.label}</b></div></li><li><span>3</span><div><small>Design focus</small><b>{designLens.focusNode}</b></div></li><li><span>4</span><div><small>Recorded test</small><b>{designLens.test.traceResult}</b></div></li><li><span>5</span><div><small>Recommendation</small><b>{designLens.decision.status}</b></div></li></ol></div>
-              <div className="decision-copy"><span className="eyebrow">Customer-facing pilot</span><h1 id="decision-title">Not ready yet.</h1><p>Evidence behavior looks strong, but the verification decision needs correction, live document search still needs validation, and the pilot measurement plan needs definition.</p><div className="selected-next-action"><small>Your selected focus · {designLens.label}</small><strong>{designLens.decision.nextAction}</strong></div><p className="decision-scope">One shared gate applies to every focus. Your choice highlights one immediate next action without changing the other prerequisites.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>Next: controlled pilot</span></div><p className="journey-summary">Maya&apos;s support problem → Focus: {designLens.label} → {designLens.test.traceResult} → Shared pilot prerequisites remain</p><div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button></div></div>
+              <div className="decision-copy"><span className="eyebrow">Customer-facing pilot</span><h1 id="decision-title">Not ready yet.</h1><p>Three prerequisites still separate the recorded prototype from a controlled pilot.</p><p className="decision-scope">One shared gate. Your focus only highlights the next action.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="selected-next-action"><small>Your {designLens.label} next action</small><strong>{designLens.decision.nextAction}</strong></div><div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>After prerequisites: controlled pilot</span></div><div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button><button type="button" onClick={() => setDrawer("journey")}>View journey</button></div></div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}
@@ -308,7 +307,7 @@ export default function Home() {
       {drawer && (
         <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setDrawer(null); }}>
           <aside className={`evidence-drawer ${drawer === "evaluation" ? "wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-            <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "evaluation" ? "Evaluation evidence" : drawer === "evidence" ? "Approved evidence" : "How the flow works"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
+            <div className="drawer-header"><div><span>Decision trace</span><h2 id="drawer-title">{drawer === "evaluation" ? "Evaluation evidence" : drawer === "evidence" ? "Approved evidence" : drawer === "journey" ? "Your journey" : "How the flow works"}</h2></div><button type="button" className="drawer-close" onClick={() => setDrawer(null)} aria-label="Close drawer">×</button></div>
 
             {drawer === "evaluation" && <div className="drawer-body case-body">
               <div className="case-context"><span>Why these 15 scenarios?</span><b>They cover the prototype&apos;s main requirements and highest-risk failure modes, from unsupported claims to account disclosure and human review.</b><small>This is an initial designed regression suite, not a statistical claim about production performance.</small></div>
@@ -336,6 +335,8 @@ export default function Home() {
             </div>}
 
             {drawer === "evidence" && <div className="drawer-body"><div className="case-context"><span>Knowledge boundary</span><b>Four current, owned documents support every public claim.</b></div><div className="document-list">{evidence.map(([id, title, excerpt]) => <article key={id}><div className="document-meta"><span>{id}</span><span>Approved · current</span></div><h3>{title}</h3><p>{excerpt}</p></article>)}</div></div>}
+
+            {drawer === "journey" && <div className="drawer-body"><div className="journey-trace"><small>From Maya&apos;s problem to the pilot gate</small><ol><li><span>1</span><div><small>Problem</small><b>Scattered support guidance</b></div></li><li><span>2</span><div><small>You chose</small><b>{designLens.label}</b></div></li><li><span>3</span><div><small>Design focus</small><b>{designLens.focusNode}</b></div></li><li><span>4</span><div><small>Recorded test</small><b>{designLens.test.traceResult}</b></div></li><li><span>5</span><div><small>Recommendation</small><b>{designLens.decision.status}</b></div></li></ol></div></div>}
 
             {drawer === "method" && <div className="drawer-body method-body"><section className="flow-glossary"><small>Five-step workflow</small><div>{flowDefinitions.map(([label, description], index) => <article key={label}><span>{index + 1}</span><p><b>{label}</b>{description}</p></article>)}</div></section><section className="retrieval-method"><small>Retrieval used in this prototype</small><h3>Simple and inspectable, not a live vector system.</h3><p>The question and known context are compared with four approved documents. Keyword overlap and topic-specific rules rank them, then the top three documents are supplied to Gemini.</p><p>A production implementation could add semantic or vector search, metadata filtering and reranking. Those capabilities were not part of this recorded evaluation.</p></section><div className="method-rule"><span>✦</span><div><small>Gemini may</small><strong>Interpret the request, draft an answer and cite supplied evidence</strong></div></div><div className="method-rule blocked"><span>⊘</span><div><small>Gemini may not</small><strong>Approve sources, change accounts or decide whether to launch</strong></div></div><section><small>Why separate these roles?</small><h3>Let Gemini draft. Keep approvals outside the model.</h3><p>Gemini handles language. Fixed system rules and people control evidence, account boundaries and release decisions.</p></section><section className="control-glossary"><small>Controls emphasized by your {designLens.label} choice</small><div>{designLens.controls.map((control) => <article key={control.label}><b>{control.label}</b><p>{control.help}</p></article>)}</div></section></div>}
           </aside>

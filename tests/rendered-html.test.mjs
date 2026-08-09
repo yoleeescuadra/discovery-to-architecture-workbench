@@ -78,12 +78,13 @@ test("keeps implementation status and production proposal explicit", async () =>
 
   assert.match(page, /Design consequence/);
   assert.match(page, /Because you chose/);
-  assert.match(page, /What changed/);
   assert.doesNotMatch(page, /What do the colors mean|Light teal: Gemini model work|Dark teal: fixed guardrails/);
   assert.doesNotMatch(page, /role="tooltip"|tip-panel|metric-help-label/);
+  assert.doesNotMatch(page, /className="control-chips"/);
   assert.match(page, /Keyword overlap and topic rules rank four approved documents/);
-  assert.match(page, /Question \+ context/);
-  assert.match(page, /Production options could add semantic or vector search, metadata filtering and reranking/);
+  assert.match(page, /Prototype retrieval:/);
+  assert.match(page, /keywords \+ topic rules/);
+  assert.match(page, /A production implementation could add semantic or vector search, metadata filtering and reranking/);
   assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
   assert.match(page, /People decide whether the pilot advances\./);
   assert.match(page, /Approved sources/);
@@ -104,12 +105,15 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Customer-facing pilot/);
   assert.match(page, /Not ready yet\./);
   assert.match(page, /all three checks determine overall readiness/);
-  assert.match(page, /One shared gate applies to every focus\./);
+  assert.match(page, /One shared gate\. Your focus only highlights the next action\./);
   assert.match(page, /Live document search/);
   assert.match(page, /Verification decision/);
   assert.match(page, /Current maturity/);
+  assert.match(page, /After prerequisites: controlled pilot/);
   assert.doesNotMatch(page, /status: "Internal pilot"|status: "Internal only"/);
   assert.match(page, /Your journey/);
+  assert.match(page, /View journey/);
+  assert.doesNotMatch(page, /className="journey-summary"/);
   assert.match(page, /Recorded test/);
   assert.match(page, /Evaluation evidence/);
   assert.match(page, /Why these 15 scenarios\?/);
@@ -118,8 +122,8 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /Requirement and risk coverage/);
   assert.match(page, /View the exact recorded prompt and model output/);
   assert.match(page, /For Maya.*fictional software product, Northstar/s);
-  assert.match(page, /Claims supported by supplied documents/);
-  assert.match(page, /Sources correctly support the claims/);
+  assert.match(page, /Claims were supported by supplied documents/);
+  assert.match(page, /Sources supported the claims/);
   assert.match(page, /Verification decision was inconsistent/);
   assert.match(page, /Gemini 3\.5 Flash-Lite/i);
   assert.match(readme, /Recorded Gemini experiment: completed/i);
