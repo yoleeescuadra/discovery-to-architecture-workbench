@@ -10,6 +10,7 @@
 - Locally recorded model results after sanitization
 - Rule-based pilot gates
 - Static interactive site and social preview
+- Fictional refund change request, designed change tests, release gate, and rollback plan
 
 ## Never publish
 
@@ -19,6 +20,8 @@
 - Credentials, API keys, environment files, or cloud project identifiers
 - Raw service logs containing user or account information
 - Unsupported claims that the reference design is production deployed
+- Claims that the Change Control Lab connects to a real payment system or validates production behavior
+- Internal planning notes, comparative project rankings, or private self-assessments
 
 ## Required public language
 

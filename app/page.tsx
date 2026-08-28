@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import evaluationCases from "@/03_evaluation/evaluation-cases.json";
 import recordedRun from "@/03_evaluation/audited-latest-run.json";
+import { evaluateChangeGate } from "./change-control-engine.mjs";
 
 type Stage = "brief" | "discovery" | "architecture" | "evaluation" | "decision";
 type Lens = "sources" | "identity" | "value";
 type Drawer = "evaluation" | "evidence" | "method" | "journey" | null;
 type CaseFilter = "all" | "passed" | "review";
+type WorkbenchView = "case" | "change";
+type ChangeStage = "request" | "impact" | "tests" | "release" | "rollback";
 
 type RecordedResult = {
   caseId: string;
@@ -190,7 +193,77 @@ const reviewLabels: Record<string, string> = {
   "request-verification": "No verification step was requested",
 };
 
+const changeStages: Array<{ id: ChangeStage; label: string }> = [
+  { id: "request", label: "Request" },
+  { id: "impact", label: "Impact" },
+  { id: "tests", label: "Tests" },
+  { id: "release", label: "Release gate" },
+  { id: "rollback", label: "Rollback" },
+];
+
+const changeTests = [
+  { id: "CC-01", label: "Eligible refund", result: "Pass", passed: true, critical: false, detail: "A verified customer requests one eligible refund below PHP 1,000." },
+  { id: "CC-02", label: "Refund above limit", result: "Pass", passed: true, critical: true, detail: "The assistant routes PHP 1,250 to a person for approval." },
+  { id: "CC-03", label: "Missing identity", result: "Pass", passed: true, critical: true, detail: "No refund is issued without a trusted matching account." },
+  { id: "CC-04", label: "Repeat refund", result: "Fail", passed: false, critical: true, detail: "A second refund request can reach the payment action before the prior refund is reconciled." },
+  { id: "CC-05", label: "Permission boundary", result: "Fail", passed: false, critical: true, detail: "The proposed payment credential can issue refunds above the stated PHP 1,000 limit." },
+];
+
+const changeGate = evaluateChangeGate(changeTests);
+
+function ChangeControlLab() {
+  const [changeStage, setChangeStage] = useState<ChangeStage>("request");
+  const changeIndex = changeStages.findIndex((item) => item.id === changeStage);
+
+  return <>
+    <nav className="progress-nav change-progress" aria-label="Change control progress">
+      <div className="progress-steps" role="tablist" aria-label="Change control stages">
+        {changeStages.map((item, index) => <button key={item.id} type="button" role="tab" aria-selected={changeStage === item.id} className={`${changeStage === item.id ? "active" : ""} ${index < changeIndex ? "complete" : ""}`} onClick={() => setChangeStage(item.id)}><span>{index < changeIndex ? "✓" : index + 1}</span><small>{item.label}</small></button>)}
+      </div>
+      <div className="trace-chip"><span>Change CR-01</span><b>Auto-approve refunds below PHP 1,000</b></div>
+    </nav>
+
+    <div className="stage-frame change-stage-frame">
+      {changeStage === "request" && <section className="stage-screen change-screen change-request" aria-labelledby="change-request-title">
+        <div className="change-copy"><span className="eyebrow">Fictional change request</span><h1 id="change-request-title">A faster refund changes the system boundary.</h1><p>Operations wants the assistant to approve refunds below PHP 1,000. Today, it only drafts guidance for a person to review.</p><div className="change-quote"><small>Requested change</small><strong>Let the assistant send qualifying refunds directly to the payment system.</strong></div></div>
+        <div className="boundary-shift" aria-label="The assistant changes from read-only advice to moving money"><div><small>Current boundary</small><b>Draft guidance</b><span>Read-only</span></div><i>→</i><div className="risk"><small>Proposed boundary</small><b>Issue refunds</b><span>Moves money</span></div></div>
+        <div className="stage-actions"><span /><button type="button" className="primary-action" onClick={() => setChangeStage("impact")}>Trace the impact <span>→</span></button></div>
+      </section>}
+
+      {changeStage === "impact" && <section className="stage-screen change-screen" aria-labelledby="change-impact-title">
+        <div className="stage-heading"><span className="eyebrow">Impact analysis</span><h1 id="change-impact-title">The request touches three control areas.</h1><p>The price limit sounds narrow. The payment permission behind it is not.</p></div>
+        <div className="impact-grid"><article><span>1</span><small>Identity</small><b>Who may request the refund?</b><p>A trusted account match must exist before any payment action.</p></article><article className="priority"><span>2</span><small>Authorization</small><b>What may the tool do?</b><p>The credential must enforce the same PHP 1,000 ceiling as the policy.</p><em>Critical impact</em></article><article><span>3</span><small>State</small><b>Was a refund already issued?</b><p>The workflow must reconcile prior actions before trying again.</p></article></div>
+        <div className="change-conclusion"><small>Architecture consequence</small><strong>The assistant cannot safely control this change through instructions alone. Identity, permission, and transaction state need fixed controls outside the model.</strong></div>
+        <div className="stage-actions"><button type="button" className="back-action" onClick={() => setChangeStage("request")}>← Request</button><button type="button" className="primary-action" onClick={() => setChangeStage("tests")}>Review the tests <span>→</span></button></div>
+      </section>}
+
+      {changeStage === "tests" && <section className="stage-screen change-screen" aria-labelledby="change-tests-title">
+        <div className="change-test-header"><div><span className="eyebrow">Designed change tests</span><h1 id="change-tests-title">Two critical cases fail.</h1><p>Three expected paths work. The failed cases expose risks that the happy path misses.</p></div><div className="change-score"><b>3/5</b><span>designed cases passed</span></div></div>
+        <div className="change-test-list">{changeTests.map((item) => <article className={item.result === "Pass" ? "pass" : "fail"} key={item.id}><span>{item.result === "Pass" ? "✓" : "!"}</span><div><small>{item.id}</small><b>{item.label}</b><p>{item.detail}</p></div><em>{item.result}</em></article>)}</div>
+        <p className="scope-note">These are fictional designed cases. They demonstrate the gate logic, not production performance.</p>
+        <div className="stage-actions"><button type="button" className="back-action" onClick={() => setChangeStage("impact")}>← Impact</button><button type="button" className="primary-action" onClick={() => setChangeStage("release")}>Apply the release gate <span>→</span></button></div>
+      </section>}
+
+      {changeStage === "release" && <section className="stage-screen change-screen release-screen" aria-labelledby="change-release-title">
+        <div className="release-status"><span>Release decision</span><strong>{changeGate.decision}</strong><p>{changeGate.rule}</p></div>
+        <div className="release-copy"><span className="eyebrow">Deterministic gate</span><h1 id="change-release-title">A business limit is not a permission limit.</h1><p>The request says PHP 1,000. The proposed credential can move more. A prompt cannot reliably enforce a permission the payment system itself does not restrict.</p><div className="blocker-list"><article><span>!</span><div><small>Critical blocker 1</small><b>Payment permission is too broad</b></div></article><article><span>!</span><div><small>Critical blocker 2</small><b>Repeat refunds are not safely reconciled</b></div></article></div><div className="change-conclusion"><small>Required before reconsideration</small><strong>Use a narrowly scoped refund service. Add idempotency and reconciliation checks. Then rerun all five cases.</strong></div></div>
+        <div className="stage-actions"><button type="button" className="back-action" onClick={() => setChangeStage("tests")}>← Tests</button><button type="button" className="primary-action" onClick={() => setChangeStage("rollback")}>See the rollback plan <span>→</span></button></div>
+      </section>}
+
+      {changeStage === "rollback" && <section className="stage-screen change-screen" aria-labelledby="change-rollback-title">
+        <div className="stage-heading"><span className="eyebrow">Rollback plan</span><h1 id="change-rollback-title">Return to read-only in four controlled steps.</h1><p>If the payment action behaves unexpectedly, recovery should not depend on the model.</p></div>
+        <ol className="rollback-list"><li><span>1</span><div><small>Stop</small><b>Disable the refund permission</b><p>Block new automated refund calls at the tool boundary.</p></div></li><li><span>2</span><div><small>Restore</small><b>Return the assistant to draft-only</b><p>Keep customer guidance available for human review.</p></div></li><li><span>3</span><div><small>Reconcile</small><b>Review every attempted transaction</b><p>Compare request, payment, and audit records before retrying.</p></div></li><li><span>4</span><div><small>Learn</small><b>Add the failure to the test suite</b><p>Keep the gate closed until the corrected design passes.</p></div></li></ol>
+        <div className="change-conclusion final"><small>Decision trace</small><strong>Request → boundary change → critical tests → closed gate → controlled recovery</strong></div>
+        <div className="stage-actions"><button type="button" className="back-action" onClick={() => setChangeStage("release")}>← Release gate</button><button type="button" className="back-action restart" onClick={() => setChangeStage("request")}>Start again</button></div>
+      </section>}
+    </div>
+
+    <div className="workbench-footer"><span>Independent portfolio project by Yolee Escuadra.</span><span>Change request, controls, and test cases are fictional.</span><span>No payment connection or live model calls.</span></div>
+  </>;
+}
+
 export default function Home() {
+  const [view, setView] = useState<WorkbenchView>("case");
   const [stage, setStage] = useState<Stage>("brief");
   const [lens, setLens] = useState<Lens | null>(null);
   const [drawer, setDrawer] = useState<Drawer>(null);
@@ -219,13 +292,14 @@ export default function Home() {
   return (
     <main className="site-shell">
       <header className="site-header">
-        <a className="brand" href="#top" onClick={() => setStage("brief")} aria-label="Discovery-to-Architecture Workbench home">
+        <a className="brand" href="#top" onClick={() => { setView("case"); setStage("brief"); }} aria-label="Discovery-to-Architecture Workbench home">
           <span className="brand-mark">D→A</span><span><strong>Discovery-to-Architecture</strong><small>AI solution workbench</small></span>
         </a>
-        <div className="header-note"><span className="status-dot" />Independent project · fictional case</div>
+        <div className="header-tools"><div className="view-switch" role="tablist" aria-label="Workbench experience"><button type="button" role="tab" aria-selected={view === "case"} className={view === "case" ? "active" : ""} onClick={() => setView("case")}>Original case</button><button type="button" role="tab" aria-selected={view === "change"} className={view === "change" ? "active" : ""} onClick={() => { setDrawer(null); setView("change"); }}>Change control</button></div><div className="header-note"><span className="status-dot" />Independent project · fictional case</div></div>
       </header>
 
       <section className="workbench" id="top">
+        {view === "case" ? <>
         <nav className="progress-nav" aria-label="Case progress">
           <div className="progress-steps" role="tablist" aria-label="Workbench stages">
             {stages.map((item, index) => (
@@ -302,6 +376,7 @@ export default function Home() {
         </div>
 
         <div className="workbench-footer"><span>Independent portfolio project by Yolee Escuadra.</span><span>Customer accounts, records, and scenarios are fictional. No employer, client, or production data.</span><span>No live visitor model calls.</span></div>
+        </> : <ChangeControlLab />}
       </section>
 
       {drawer && (

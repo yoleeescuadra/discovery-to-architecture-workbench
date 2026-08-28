@@ -6,12 +6,14 @@ Discovery-to-Architecture Workbench is an independent AI solution-design portfol
 
 > Maya leads a customer-support team with scattered guidance and repetitive questions. Should she approve an AI pilot?
 
-The project demonstrates how an AI Solutions Architect can move from an ambiguous customer need to structured discovery, an evidence-backed architecture recommendation, measurable evaluation criteria, and a cross-lens pilot-readiness decision.
+The project demonstrates a path from an ambiguous customer need to structured discovery, an evidence-backed architecture recommendation, measurable evaluation criteria, and a cross-lens pilot-readiness decision.
+
+The Change Control Lab extends the same method after the initial design. It traces one fictional refund-automation request through boundary analysis, designed tests, a deterministic release decision, and a controlled rollback plan.
 
 ## Primary audience
 
-- AI Solutions Architect and Solutions Engineer hiring teams
-- Technical presales and customer-engineering leaders
+- Technical teams evaluating AI-assisted support systems
+- Technical presales and customer-engineering practitioners
 - Business stakeholders considering a retrieval-based AI pilot
 - Readers who have experienced inconsistent support answers or scattered internal knowledge
 
@@ -25,6 +27,7 @@ Visitors:
 4. See the same 14 of 15 overall evaluation result, then inspect the focused finding through that lens.
 5. See the same overall pilot gate with a lens-specific next action.
 6. Inspect one consolidated evaluation drawer with rationale, coverage, scope, technical terms, recorded prompts, model outputs, and expected-versus-actual results.
+7. Switch to Change Control and inspect how a new request changes permissions, failure cases, release readiness, and recovery.
 
 ## V1 scope
 
@@ -35,6 +38,8 @@ Visitors:
 - One consolidated evaluation drawer plus focused source and workflow drawers
 - One rule-based pilot decision
 - Static public experience with no visitor-triggered model calls
+- One fictional change request with five designed change tests
+- One deterministic change-release gate and rollback plan
 
 ## Implemented versus proposed
 
@@ -45,6 +50,7 @@ Visitors:
 - Designed evaluation scenarios and deterministic release gates
 - Recorded-run interface and provenance model
 - Responsive static delivery
+- Interactive change-control walkthrough
 
 ### Proposed production architecture
 

@@ -69,11 +69,12 @@ test("does not fail EV-04 for an irrelevant entitlement citation", async () => {
 });
 
 test("keeps implementation status and production proposal explicit", async () => {
-  const [page, readme, boundary, runner] = await Promise.all([
+  const [page, readme, boundary, runner, changeEngine] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../README.md", import.meta.url), "utf8"),
     readFile(new URL("../PUBLIC_PRIVATE_BOUNDARY.md", import.meta.url), "utf8"),
     readFile(new URL("../scripts/run-gemini-evaluation.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/change-control-engine.mjs", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /Design consequence/);
@@ -86,6 +87,16 @@ test("keeps implementation status and production proposal explicit", async () =>
   assert.match(page, /keywords \+ topic rules/);
   assert.match(page, /A production implementation could add semantic or vector search, metadata filtering and reranking/);
   assert.match(page, /Let Gemini draft\. Keep approvals outside the model\./);
+  assert.match(page, /Change control/);
+  assert.match(page, /A faster refund changes the system boundary\./);
+  assert.match(page, /The request touches three control areas\./);
+  assert.match(page, /Two critical cases fail\./);
+  assert.match(page, /A business limit is not a permission limit\./);
+  assert.match(changeEngine, /Do not proceed/);
+  assert.match(page, /Payment permission is too broad/);
+  assert.match(page, /Repeat refunds are not safely reconciled/);
+  assert.match(page, /Return to read-only in four controlled steps\./);
+  assert.match(page, /No payment connection or live model calls\./);
   assert.match(page, /A technically good answer does not prove the workflow is worth adopting\./);
   assert.match(page, /Approved sources/);
   assert.match(page, /Trusted session/);
