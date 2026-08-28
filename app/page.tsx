@@ -238,8 +238,17 @@ function ChangeControlLab() {
       </section>}
 
       {changeStage === "tests" && <section className="stage-screen change-screen" aria-labelledby="change-tests-title">
-        <div className="change-test-header"><div><span className="eyebrow">Designed change tests</span><h1 id="change-tests-title">Two critical cases fail.</h1><p>Three expected paths work. The failed cases expose risks that the happy path misses.</p></div><div className="change-score"><b>3/5</b><span>designed cases passed</span></div></div>
-        <div className="change-test-list">{changeTests.map((item) => <article className={item.result === "Pass" ? "pass" : "fail"} key={item.id}><span>{item.result === "Pass" ? "✓" : "!"}</span><div><small>{item.id}</small><b>{item.label}</b><p>{item.detail}</p></div><em>{item.result}</em></article>)}</div>
+        <div className="change-test-header"><div><span className="eyebrow">Designed change tests</span><h1 id="change-tests-title">Two critical cases fail.</h1><p>The failures reveal why the change cannot be released yet.</p></div></div>
+        <div className="change-test-layout">
+          <section className="test-group pass-group" aria-labelledby="passing-tests-title">
+            <div className="test-group-heading"><span>✓</span><div><small>Three cases passed</small><h2 id="passing-tests-title">Expected controls worked.</h2></div></div>
+            <div className="passing-test-list">{changeTests.filter((item) => item.result === "Pass").map((item) => <article key={item.id}><span>✓</span><div><small>{item.id}</small><b>{item.label}</b><p>{item.detail}</p></div></article>)}</div>
+          </section>
+          <section className="test-group fail-group" aria-labelledby="failing-tests-title">
+            <div className="test-group-heading"><span>!</span><div><small>Two critical failures</small><h2 id="failing-tests-title">These blockers keep the gate closed.</h2></div></div>
+            <div className="failing-test-list">{changeTests.filter((item) => item.result === "Fail").map((item) => <article key={item.id}><span>!</span><div><small>{item.id}</small><b>{item.label}</b><p>{item.detail}</p></div><em>Critical failure</em></article>)}</div>
+          </section>
+        </div>
         <p className="scope-note">These are fictional designed cases. They demonstrate the gate logic, not production performance.</p>
         <div className="stage-actions"><button type="button" className="back-action" onClick={() => setChangeStage("impact")}>← Impact</button><button type="button" className="primary-action" onClick={() => setChangeStage("release")}>Apply the release gate <span>→</span></button></div>
       </section>}
