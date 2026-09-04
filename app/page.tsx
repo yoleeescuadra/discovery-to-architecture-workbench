@@ -218,7 +218,7 @@ function ChangeControlLab() {
   return <>
     <nav className="progress-nav change-progress" aria-label="Change control progress">
       <div className="progress-steps" role="tablist" aria-label="Change control stages">
-        {changeStages.map((item, index) => <button key={item.id} type="button" role="tab" aria-selected={changeStage === item.id} className={`${changeStage === item.id ? "active" : ""} ${index < changeIndex ? "complete" : ""}`} onClick={() => setChangeStage(item.id)}><span>{index < changeIndex ? "✓" : index + 1}</span><small>{item.label}</small></button>)}
+        {changeStages.map((item, index) => <button key={item.id} type="button" role="tab" aria-label={item.label} aria-selected={changeStage === item.id} className={`${changeStage === item.id ? "active" : ""} ${index < changeIndex ? "complete" : ""}`} onClick={() => setChangeStage(item.id)}><span>{index < changeIndex ? "✓" : index + 1}</span><small>{item.label}</small></button>)}
       </div>
       <div className="trace-chip"><span>Change CR-01</span><b>Auto-approve refunds below PHP 1,000</b></div>
     </nav>
@@ -312,7 +312,7 @@ export default function Home() {
         <nav className="progress-nav" aria-label="Case progress">
           <div className="progress-steps" role="tablist" aria-label="Workbench stages">
             {stages.map((item, index) => (
-              <button key={item.id} type="button" role="tab" aria-selected={stage === item.id} className={`${stage === item.id ? "active" : ""} ${index < stageIndex ? "complete" : ""}`} onClick={() => move(item.id)}>
+              <button key={item.id} type="button" role="tab" aria-label={item.label} aria-selected={stage === item.id} className={`${stage === item.id ? "active" : ""} ${index < stageIndex ? "complete" : ""}`} onClick={() => move(item.id)}>
                 <span>{index < stageIndex ? "✓" : index + 1}</span><small>{item.label}</small>
               </button>
             ))}
@@ -378,7 +378,22 @@ export default function Home() {
 
           {stage === "decision" && (
             <section className="stage-screen decision-screen" aria-labelledby="decision-title">
-              <div className="decision-copy"><span className="eyebrow">Customer-facing pilot</span><h1 id="decision-title">Not ready yet.</h1><p>Three prerequisites still separate the recorded prototype from a controlled pilot.</p><p className="decision-scope">One shared gate. Your focus only highlights the next action.</p><div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div><div className="selected-next-action"><small>Your {designLens.label} next action</small><strong>{designLens.decision.nextAction}</strong></div><div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>After prerequisites: controlled pilot</span></div><p className="decision-reconnect">The idea is promising, but Maya should not put it in front of customers until all three prerequisites are resolved.</p><div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button><button type="button" onClick={() => setDrawer("journey")}>View journey</button></div></div>
+              <div className="decision-copy">
+                <div className="decision-primary">
+                  <span className="eyebrow">Customer-facing pilot</span>
+                  <h1 id="decision-title">Not ready yet.</h1>
+                  <p>Three prerequisites still separate the recorded prototype from a controlled pilot.</p>
+                  <p className="decision-scope">One shared gate. Your focus only highlights the next action.</p>
+                  <div className="selected-next-action"><small>Your {designLens.label} next action</small><strong>{designLens.decision.nextAction}</strong></div>
+                  <p className="decision-reconnect">The idea is promising. Maya should wait until all three prerequisites are resolved.</p>
+                </div>
+                <div className="decision-controls">
+                  <span className="decision-section-label">Release prerequisites</span>
+                  <div className="decision-gates">{pilotGates.map((gate) => <div className={gate.id === designLens.id ? "priority" : ""} key={gate.label}><span className={`gate-dot ${gate.state}`} /><b>{gate.label}</b><small>{gate.value}</small>{gate.id === designLens.id && <em>Your focus</em>}</div>)}</div>
+                  <div className="maturity-line"><small>Current maturity</small><span>Prototype</span><i>→</i><b>Offline evaluation</b><i>→</i><span>After prerequisites: controlled pilot</span></div>
+                  <div className="decision-links"><button type="button" onClick={() => setDrawer("evaluation")}>View evaluation</button><button type="button" onClick={() => setDrawer("evidence")}>View sources</button><button type="button" onClick={() => setDrawer("journey")}>View journey</button></div>
+                </div>
+              </div>
               <div className="stage-actions"><button type="button" className="back-action" onClick={() => move("evaluation")}>← Test result</button><button type="button" className="back-action restart" onClick={() => { setStage("brief"); setLens(null); }}>Start again</button></div>
             </section>
           )}
